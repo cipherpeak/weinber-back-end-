@@ -6,7 +6,7 @@ from django.utils import timezone
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ['heading', 'status', 'address', 'task_time', 'percentage_completed']
+        fields = ['heading', 'status', 'address', 'task_assign_time', 'percentage_completed']
 
 class BreakTimerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,7 +65,7 @@ class HomeAPISerializer(serializers.ModelSerializer):
         """Returns True if there are any ongoing tasks, False otherwise"""
         today = timezone.now().date()
         ongoing_tasks = obj.tasks.filter(
-            task_time__date=today,
+            task_assign_time__date=today,
             status__in=['paused', 'in_progress']
         )
         return ongoing_tasks.exists()
@@ -73,7 +73,7 @@ class HomeAPISerializer(serializers.ModelSerializer):
     def get_ongoing_tasks(self, obj):
         today = timezone.now().date()
         ongoing_tasks = obj.tasks.filter(
-            task_time__date=today,
+            task_assign_time__date=today,
             status__in=['paused', 'in_progress']
         )
         return TaskSerializer(ongoing_tasks, many=True).data
@@ -114,11 +114,11 @@ class HomeAPISerializer(serializers.ModelSerializer):
 
     def get_total_no_of_tasks_today(self, obj):
         today = timezone.now().date()
-        return obj.tasks.filter(task_time__date=today).count()
+        return obj.tasks.filter(task_assign_time__date=today).count()
 
     def get_tasks(self, obj):
         today = timezone.now().date()
-        today_tasks = obj.tasks.filter(task_time__date=today)
+        today_tasks = obj.tasks.filter(task_assign_time__date=today)
         
         tasks_data = []
         for task in today_tasks:
@@ -126,7 +126,7 @@ class HomeAPISerializer(serializers.ModelSerializer):
                 'type_of_task': task.task_type,
                 'heading': task.heading,
                 'address_or_sub_details': task.address,
-                'time_of_task': task.task_time
+                'time_of_task': task.task_assign_time
             }
             tasks_data.append(task_data)
         

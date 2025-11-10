@@ -23,6 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('authapp.urls')),
     path('api/home/', include('home.urls')),
+    path('api/profile/', include('profileapp.urls')),
+    path('api/task/', include('task.urls')),
 
 ]
 

@@ -29,3 +29,5 @@ class EmployeeSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.app_icon.url)
             return obj.app_icon.url
         return None  
+    
+

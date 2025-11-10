@@ -15,10 +15,24 @@ class Task(models.Model):
     
     TASK_TYPE_CHOICES = [
         ('nothing', 'Nothing Task'),
-        ('ongoing', 'Ongoing Task'),
         ('delivery', 'Delivery'),
         ('office', 'Office'),
         ('service', 'Service/Detailing'),
+    ]
+
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+
+    ICON_TYPE_CHOICES = [
+        ('nothing', 'Nothing'),
+        ('ongoing', 'Ongoing'),
+        ('delivery', 'Delivery'),
+        ('office', 'Office'),
+        ('service', 'Service'),
         ('mechanic', 'Mechanic'),
     ]
 
@@ -27,7 +41,22 @@ class Task(models.Model):
     heading = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='not_started')
     address = models.TextField(blank=True, null=True)
-    task_time = models.DateTimeField()
+    task_assign_time = models.DateTimeField(blank=True, null=True)
+    task_start_time = models.DateTimeField(blank=True, null=True)
+    task_completed_date = models.DateTimeField(blank=True, null=True)
+    due_date = models.DateTimeField(blank=True, null=True)
+    vehicle_details = models.TextField(blank=True, null=True)
+    vehicle_model = models.CharField(max_length=100, blank=True, null=True) 
+    vehicle_year = models.IntegerField(blank=True, null=True) 
+    vehicle_color = models.CharField(max_length=50, blank=True, null=True) 
+    vehicle_image_before = models.ImageField(upload_to='vehicle_images/before/', blank=True, null=True)
+    vehicle_image_after = models.ImageField(upload_to='vehicle_images/after/', blank=True, null=True)
+    description = models.TextField(blank=True, null=True)  
+    customer_name = models.CharField(max_length=255, blank=True, null=True)
+    task_notes = models.TextField(blank=True, null=True)
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    location = models.CharField(max_length=500, blank=True, null=True)
+    icon_type = models.CharField(max_length=20, choices=ICON_TYPE_CHOICES, default='nothing') 
     percentage_completed = models.IntegerField(default=0)
     is_nothing_task = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -35,7 +64,11 @@ class Task(models.Model):
     
     def __str__(self):
         return f"{self.employee.employeeId} - {self.heading}"
-   
+       
+    def save(self, *args, **kwargs):
+        if not self.icon_type or self.icon_type == 'nothing':
+            self.icon_type = self.task_type
+        super().save(*args, **kwargs)
     
 class DeliveryTask(models.Model):
     task = models.OneToOneField(Task, on_delete=models.CASCADE, related_name='delivery_details')
@@ -65,24 +98,58 @@ class OfficeTask(models.Model):
 
 
 class ServiceTask(models.Model):
+
     SERVICE_TYPE_CHOICES = [
-        ('detailing_interior', 'Detailing - Interior'),
         ('car_wash', 'Car Wash'),
         ('full_service', 'Full Service'),
+        ('paint_protection_film_wrapping', 'Paint Protection - Film Wrapping'),
+        ('window_tinting', 'Window - Tinting'),
+        ('advanced_borophene_coating', 'Advanced Borophene - Coating'),
+        ('premium_graphene_coating', 'Premium Graphene - Coating'),
+        ('premium_nanoceramic_coating', 'Premium Nanoceramic - Coating'),
+        ('exterior_detailing', 'Exterior - Detailing'),
+        ('interior_detailing', 'Interior - Detailing'),
     ]
-    
-    task = models.OneToOneField(Task, on_delete=models.CASCADE, related_name='service_details')
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='service_tasks')
     service_type = models.CharField(max_length=50, choices=SERVICE_TYPE_CHOICES)
-    time_taken = models.DurationField()
-    vehicle_details = models.TextField()
+    time_taken = models.DurationField(blank=True, null=True)
     vin_number = models.CharField(max_length=100)
     vin_image = models.ImageField(upload_to='vin_images/', blank=True, null=True)
-    vehicle_image_before = models.ImageField(upload_to='vehicle_images/before/', blank=True, null=True)
-    vehicle_image_after = models.ImageField(upload_to='vehicle_images/after/', blank=True, null=True)
     shared_staff_details = models.TextField(blank=True, null=True)
     work_location = models.CharField(max_length=255)
-    work_start_time = models.DateTimeField()
-    work_end_time = models.DateTimeField()
+    work_start_time = models.DateTimeField(blank=True, null=True)
+    work_end_time = models.DateTimeField(blank=True, null=True)
     
     def __str__(self):
         return f"Service - {self.service_type}"
+    
+
+
+class Duty(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+
+class TaskDuty(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='task_duties')
+    duty = models.ForeignKey(Duty, on_delete=models.CASCADE)
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.task.heading} - {self.duty.name}"
+
+class TaskProgressImage(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='progress_images')
+    image = models.ImageField(upload_to='task_progress_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.task.heading} - {self.percentage_completed}%"    

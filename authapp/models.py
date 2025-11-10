@@ -30,9 +30,37 @@ class Employee(AbstractBaseUser, PermissionsMixin):
         ('mechanic', 'Mechanic'),
     ]
 
+    DESIGNATION_CHOICES = [
+        ('car_service_associate', 'Car Service Associate'),
+        ('service_advisor', 'Service Advisor'),
+        ('service_supervisor', 'Service Supervisor'),
+        ('service_manager', 'Service Manager'),
+    ]
+
+    DEPARTMENT_CHOICES = [
+        ('service', 'Service Department'),
+        ('delivery', 'Delivery Department'),
+        ('office', 'Office Administration'),
+        ('mechanic', 'Mechanic Department'),
+        ('quality', 'Quality Control'),
+        ('customer_service', 'Customer Service'),
+        ('hr', 'Human Resources'),
+        ('finance', 'Finance'),
+        ('it', 'IT Support'),
+    ]
+
+    RELATION_CHOICES = [
+        ('father', 'Father'),
+        ('mother', 'Mother'),
+        ('spouse', 'Spouse'),
+        ('sibling', 'Sibling'),
+        ('child', 'Child'),
+        ('friend', 'Friend'),
+        ('other', 'Other'),
+    ]
+
     employeeId = models.CharField(max_length=50, unique=True)
     employee_name = models.CharField(max_length=100, blank=True, null=True)
-    # Required fields for custom user model
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     
@@ -56,6 +84,89 @@ class Employee(AbstractBaseUser, PermissionsMixin):
         default='service'
     )
 
+    designation = models.CharField(
+        max_length=30,
+        choices=DESIGNATION_CHOICES,
+        default='car_service_associate'
+    )
+
+    department = models.CharField(
+        max_length=30,
+        choices=DEPARTMENT_CHOICES,
+        default='service'
+    )
+
+    branch_location = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+    
+    company_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        default='Your Company Name'
+    )
+    
+    date_of_joining = models.DateField(
+        blank=True,
+        null=True
+    )
+    
+    reporting_manager = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    # New Personal Information fields
+    mobile_number = models.CharField(
+        max_length=15,
+        blank=True,
+        null=True
+    )
+    
+    email = models.EmailField(
+        blank=True,
+        null=True
+    )
+    
+    home_address = models.TextField(
+        blank=True,
+        null=True
+    )
+    
+    date_of_birth = models.DateField(
+        blank=True,
+        null=True
+    )
+    
+    nationality = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True
+    )
+    
+    # Emergency Contact Information
+    emergency_contact_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+    
+    emergency_contact_number = models.CharField(
+        max_length=15,
+        blank=True,
+        null=True
+    )
+    
+    emergency_contact_relation = models.CharField(
+        max_length=20,
+        choices=RELATION_CHOICES,
+        blank=True,
+        null=True
+    )
 
     objects = EmployeeManager()
 

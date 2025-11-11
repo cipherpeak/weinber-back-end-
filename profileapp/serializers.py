@@ -157,60 +157,38 @@ class VisaDetailsSerializer(serializers.ModelSerializer):
 
 
 class DocumentUpdateSerializer(serializers.Serializer):
-    documents = serializers.ListField(
-        child=serializers.DictField(),
+    document_type = serializers.ChoiceField(
+        choices=[
+            ('visa_copy', 'Visa Photo Copy'),
+            ('labour_card', 'Labour Card Copy'),
+            ('passport_copy', 'Passport Copy'),
+            ('emirates_id', 'Emirates ID Copy'),
+            ('work_permit', 'Work Permit Copy'),
+        ],
         required=True
     )
-
-    def validate_documents(self, value):
-        """Validate the documents list"""
-        valid_document_types = ['visa_copy', 'labour_card', 'passport_copy', 'emirates_id', 'work_permit']
-        
-        for doc_data in value:
-            if 'document_type' not in doc_data:
-                raise serializers.ValidationError("Each document must have a 'document_type'")
-            
-            if doc_data['document_type'] not in valid_document_types:
-                raise serializers.ValidationError(f"Invalid document type: {doc_data['document_type']}")
-            
-            if 'document_file' not in doc_data:
-                raise serializers.ValidationError("Each document must have a 'document_file'")
-        
-        return value
-
-    def create_or_update_documents(self, visa_details, documents_data):
-        """Create or update documents for visa details"""
-        updated_documents = []
-        
-        for doc_data in documents_data:
-            document_type = doc_data['document_type']
-            document_file = doc_data['document_file']
-            
-            # Delete existing document of same type if exists
-            Document.objects.filter(
-                visa_details=visa_details, 
-                document_type=document_type
-            ).delete()
-            
-            # Create new document
-            document = Document.objects.create(
-                visa_details=visa_details,
-                document_type=document_type,
-                document_file=document_file
-            )
-            
-            # Add to response list
-            updated_documents.append({
-                'document_type': document.document_type,
-                'document_name': document.get_document_type_display(),
-                'document_file': document.document_file.url if document.document_file else None
-            })
-        
-        return updated_documents
+    document_file = serializers.FileField(required=True)
 
     def save(self, **kwargs):
         visa_details = self.context['visa_details']
-        documents_data = self.validated_data['documents']
+        document_type = self.validated_data['document_type']
+        document_file = self.validated_data['document_file']
         
-        updated_documents = self.create_or_update_documents(visa_details, documents_data)
-        return updated_documents
+        # Delete existing document of same type if exists
+        Document.objects.filter(
+            visa_details=visa_details, 
+            document_type=document_type
+        ).delete()
+        
+        # Create new document
+        document = Document.objects.create(
+            visa_details=visa_details,
+            document_type=document_type,
+            document_file=document_file
+        )
+        
+        return {
+            'document_type': document.document_type,
+            'document_name': document.get_document_type_display(),
+            'document_file': document.document_file.url if document.document_file else None
+        }

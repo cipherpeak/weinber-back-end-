@@ -211,7 +211,7 @@ class StartBreakAPIView(APIView):
                 break_start_time=timezone.now(),
                 date=today,
                 duration=timezone.timedelta(0),
-                reason=serializer.validated_data.get('reason', '')  # Reason for break start
+                reason=serializer.validated_data.get('reason', '')  
             )
             
             return Response({

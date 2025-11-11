@@ -63,7 +63,7 @@ class EmployeePersonalInfoUpdateView(APIView):
             serializer = EmployeePersonalInfoUpdateSerializer(
                 employee, 
                 data=request.data, 
-                partial=True  # Allow partial updates
+                partial=True  
             )
             
             if serializer.is_valid():
@@ -116,6 +116,7 @@ class VisaDocumentsUpdateView(APIView):
         try:
             employee = request.user
             
+            # Get or create visa details for the employee
             visa_details, created = VisaDetails.objects.get_or_create(employee=employee)
             
             serializer = DocumentUpdateSerializer(
@@ -124,18 +125,22 @@ class VisaDocumentsUpdateView(APIView):
             )
             
             if serializer.is_valid():
-                updated_documents = serializer.save()
+                updated_document = serializer.save()
                 
                 return Response({
-                    "documents": updated_documents
+                    "status": "success",
+                    "message": "Document uploaded successfully",
+                    "data": updated_document
                 }, status=status.HTTP_200_OK)
             else:
                 return Response({
-                    "error": "Validation failed",
-                    "details": serializer.errors
+                    "status": "error",
+                    "message": "Validation failed",
+                    "errors": serializer.errors
                 }, status=status.HTTP_400_BAD_REQUEST)
                 
         except Exception as e:
             return Response({
-                "error": str(e)
+                "status": "error",
+                "message": str(e)
             }, status=status.HTTP_400_BAD_REQUEST)

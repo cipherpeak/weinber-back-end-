@@ -7,4 +7,5 @@ urlpatterns = [
     path('checkout/', CheckOutAPIView.as_view(), name='checkout'),
     path('break/start/', StartBreakAPIView.as_view(), name='start-break'),
     path('break/end/', EndBreakAPIView.as_view(), name='end-break'),
+    path('company-announcements/', CompanyAnnouncementListAPIView.as_view(), name='company-announcements'),
 ]

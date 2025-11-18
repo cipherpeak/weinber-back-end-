@@ -14,6 +14,7 @@ class EmployeeManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('role', 'super_admin')
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
@@ -58,11 +59,23 @@ class Employee(AbstractBaseUser, PermissionsMixin):
         ('friend', 'Friend'),
         ('other', 'Other'),
     ]
+    
+    ROLE_CHOICES = [
+        ('super_admin', 'Super Admin'),
+        ('admin', 'Admin'),
+        ('employee', 'Employee'),
+    ]
 
     employeeId = models.CharField(max_length=50, unique=True)
     employee_name = models.CharField(max_length=100, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='employee'
+    )
     
     profile_pic = models.ImageField(
         upload_to='employee_profile_pics/',
@@ -192,3 +205,13 @@ class Employee(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         return self.employeeId
+
+    # Role-based methods
+    def is_super_admin(self):
+        return self.role == 'super_admin'
+    
+    def is_admin(self):
+        return self.role == 'admin'
+    
+    def is_employee(self):
+        return self.role == 'employee'

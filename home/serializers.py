@@ -27,6 +27,8 @@ class CompanyAnnouncementSerializer(serializers.ModelSerializer):
 
 class HomeAPISerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='employee_name')  
+    role = serializers.CharField(source='get_role_display')
+    employee_type = serializers.CharField(source='get_employee_type_display')  
     notification_count = serializers.SerializerMethodField()
     ongoing_task = serializers.SerializerMethodField()
     ongoing_tasks = serializers.SerializerMethodField()
@@ -42,6 +44,8 @@ class HomeAPISerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             'name',
+            'role',
+            'employee_type', 
             'notification_count',
             'ongoing_task',
             'ongoing_tasks', 
@@ -55,8 +59,6 @@ class HomeAPISerializer(serializers.ModelSerializer):
         ]
 
     def get_notification_count(self, obj):
-        # Make sure you have a notifications relationship in your Employee model
-        # If not, you'll need to add it or remove this field
         if hasattr(obj, 'notifications'):
             return obj.notifications.filter(is_read=False).count()
         return 0
@@ -93,23 +95,35 @@ class HomeAPISerializer(serializers.ModelSerializer):
 
     def get_status_of_check(self, obj):
         today = timezone.now().date()
+        # Updated to use check_date field instead of check_time__date
         last_check = obj.attendance_checks.filter(
-            check_time__date=today
-        ).order_by('-check_time').first()
+            check_date=today
+        ).order_by('-created_at').first()  # Using created_at for ordering
+        
         return last_check.check_type if last_check else "out"
 
     def get_check_in_out_time(self, obj):
         today = timezone.now().date()
+        # Updated to use check_date field
         today_checks = obj.attendance_checks.filter(
-            check_time__date=today
-        ).order_by('check_time')
+            check_date=today
+        ).order_by('created_at')  # Using created_at for ordering
         
         check_in = today_checks.filter(check_type='in').first()
         check_out = today_checks.filter(check_type='out').last()
         
         return {
-            'check_in': check_in.check_time if check_in else None,
-            'check_out': check_out.check_time if check_out else None
+            'check_in': {
+                'time': check_in.check_time if check_in else None,
+                'time_zone': check_in.time_zone if check_in else None,
+                'location': check_in.location if check_in else None
+            },
+            'check_out': {
+                'time': check_out.check_time if check_out else None,
+                'time_zone': check_out.time_zone if check_out else None,
+                'location': check_out.location if check_out else None,
+                'reason': check_out.reason if check_out else None
+            }
         }
 
     def get_total_no_of_tasks_today(self, obj):
@@ -137,17 +151,37 @@ class HomeAPISerializer(serializers.ModelSerializer):
             is_active=True
         ).order_by('-date')[:3]
         return CompanyAnnouncementSerializer(announcements, many=True).data
-    
-
 
 class CheckInOutSerializer(serializers.Serializer):
     location = serializers.CharField(max_length=255, required=True)
     reason = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    check_time = serializers.CharField(max_length=100, required=True)
+    time_zone = serializers.CharField(max_length=100, required=True)
 
     def validate_location(self, value):
         if not value or value.strip() == '':
             raise serializers.ValidationError("Location is required")
         return value
+
+    def validate_check_time(self, value):
+        if not value or value.strip() == '':
+            raise serializers.ValidationError("Check time is required")
+        return value
+
+    def validate_time_zone(self, value):
+        if not value or value.strip() == '':
+            raise serializers.ValidationError("Time zone is required")
+        return value
+
+    def validate(self, data):
+        # For checkout, reason is mandatory
+        if self.context.get('is_checkout', False):
+            reason = data.get('reason')
+            if not reason or str(reason).strip() == '':
+                raise serializers.ValidationError({
+                    "reason": "Reason is required for checkout"
+                })
+        return data
 
 class BreakSerializer(serializers.Serializer):
     break_type = serializers.ChoiceField(
@@ -161,3 +195,10 @@ class BreakSerializer(serializers.Serializer):
         if value not in dict(BreakTimer.BREAK_TYPE_CHOICES):
             raise serializers.ValidationError("Invalid break type")
         return value    
+    
+
+
+class CompanyAnnouncementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyAnnouncement
+        fields = ['id', 'heading', 'description', 'date', 'is_active', 'created_at', 'updated_at']    

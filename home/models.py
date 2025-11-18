@@ -1,3 +1,4 @@
+from datetime import timezone
 from django.db import models
 from authapp.models import Employee
 
@@ -11,12 +12,24 @@ class AttendanceCheck(models.Model):
     
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='attendance_checks')
     check_type = models.CharField(max_length=10, choices=CHECK_TYPE_CHOICES)
-    check_time = models.DateTimeField()
+    check_date = models.DateField(blank=True,null=True)  
+    check_time = models.CharField(max_length=100)
+    time_zone = models.CharField(max_length=100)
     location = models.CharField(max_length=255, blank=True, null=True)
-    reason = models.TextField(blank=True, null=True)  
+    reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
+    
+    class Meta:
+        ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.employee.employeeId} - {self.check_type}"
+        return f"{self.employee.employeeId} - {self.check_type} - {self.check_date}"
+    
+    def save(self, *args, **kwargs):
+        # Auto-set check_date to today if not provided
+        if not self.check_date:
+            self.check_date = timezone.now().date()
+        super().save(*args, **kwargs)
     
 
 class BreakTimer(models.Model):
@@ -48,15 +61,25 @@ class BreakHistory(models.Model):
         return f"{self.employee.employeeId} - {self.date}"
 
 
+
+
+from django.utils import timezone
+
 class CompanyAnnouncement(models.Model):
     heading = models.CharField(max_length=255)
-    body = models.TextField()
-    date = models.DateTimeField(auto_now_add=True)
+    description = models.TextField()
+    date = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
-    
-    def __str__(self):
-        return self.heading        
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ['-date']
+        verbose_name = 'Company Announcement'
+        verbose_name_plural = 'Company Announcements'
+
+    def __str__(self):
+        return self.heading
 
 
 

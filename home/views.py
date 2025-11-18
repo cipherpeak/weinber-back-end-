@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import AttendanceCheck, BreakHistory, BreakTimer, Employee
-from .serializers import BreakSerializer, CheckInOutSerializer, HomeAPISerializer
+from .models import AttendanceCheck, BreakHistory, BreakTimer, CompanyAnnouncement, Employee
+from .serializers import BreakSerializer, CheckInOutSerializer, CompanyAnnouncementSerializer, HomeAPISerializer
 
 class HomeAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -27,7 +27,7 @@ class CheckInAPIView(APIView):
     
     def post(self, request):
         try:
-            serializer = CheckInOutSerializer(data=request.data)
+            serializer = CheckInOutSerializer(data=request.data, context={'is_checkout': False})
             if not serializer.is_valid():
                 return Response(
                     {"error": serializer.errors}, 
@@ -37,10 +37,9 @@ class CheckInAPIView(APIView):
             employee = request.user
             today = timezone.now().date()
             
-            # Check if already checked in today
             existing_checkin = AttendanceCheck.objects.filter(
                 employee=employee,
-                check_time__date=today,
+                check_date=today,
                 check_type='in'
             ).exists()
             
@@ -50,21 +49,25 @@ class CheckInAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Create check-in record WITHOUT reason
+            # Create check-in record
             checkin = AttendanceCheck.objects.create(
                 employee=employee,
                 check_type='in',
-                check_time=timezone.now(),
+                check_date=today,
+                check_time=serializer.validated_data['check_time'],
+                time_zone=serializer.validated_data['time_zone'],
                 location=serializer.validated_data['location']
-                # No reason for checkin
+                # No reason for check-in
             )
             
             return Response({
                 "status": "success",
                 "message": "Checked in successfully",
+                "check_id": checkin.id,
+                "check_date": str(checkin.check_date),
                 "check_time": checkin.check_time,
+                "time_zone": checkin.time_zone,
                 "location": checkin.location
-                # No reason in response for checkin
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
@@ -78,7 +81,7 @@ class CheckOutAPIView(APIView):
     
     def post(self, request):
         try:
-            serializer = CheckInOutSerializer(data=request.data)
+            serializer = CheckInOutSerializer(data=request.data, context={'is_checkout': True})
             if not serializer.is_valid():
                 return Response(
                     {"error": serializer.errors}, 
@@ -88,10 +91,10 @@ class CheckOutAPIView(APIView):
             employee = request.user
             today = timezone.now().date()
             
-            # Check if checked in today
+            # Check if user has checked in today
             checkin_today = AttendanceCheck.objects.filter(
                 employee=employee,
-                check_time__date=today,
+                check_date=today,
                 check_type='in'
             ).exists()
             
@@ -104,7 +107,7 @@ class CheckOutAPIView(APIView):
             # Check if already checked out today
             existing_checkout = AttendanceCheck.objects.filter(
                 employee=employee,
-                check_time__date=today,
+                check_date=today,
                 check_type='out'
             ).exists()
             
@@ -127,21 +130,26 @@ class CheckOutAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Create check-out record WITH reason
+            # Create check-out record WITH reason (mandatory)
             checkout = AttendanceCheck.objects.create(
                 employee=employee,
                 check_type='out',
-                check_time=timezone.now(),
+                check_date=today,
+                check_time=serializer.validated_data['check_time'],
+                time_zone=serializer.validated_data['time_zone'],
                 location=serializer.validated_data['location'],
-                reason=serializer.validated_data.get('reason', '')  # Reason for checkout
+                reason=serializer.validated_data['reason']  # Reason is mandatory for checkout
             )
             
             return Response({
                 "status": "success",
                 "message": "Checked out successfully",
+                "check_id": checkout.id,
+                "check_date": str(checkout.check_date),
                 "check_time": checkout.check_time,
+                "time_zone": checkout.time_zone,
                 "location": checkout.location,
-                "reason": checkout.reason  # Include reason in response
+                "reason": checkout.reason
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
@@ -149,7 +157,6 @@ class CheckOutAPIView(APIView):
                 {"error": str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 class StartBreakAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -372,3 +379,30 @@ class EndBreakAPIView(APIView):
             if break_type == 'scheduled':
                 break_history.number_of_scheduled_breaks += 1
             break_history.save()
+
+
+class CompanyAnnouncementListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            announcements = CompanyAnnouncement.objects.filter(
+                is_active=True
+            ).order_by('-date')
+            
+            serializer = CompanyAnnouncementSerializer(announcements, many=True)
+            
+            return Response({
+                'status': 'success',
+                'count': announcements.count(),
+                'announcements': serializer.data
+            })
+            
+        except Exception as e:
+            return Response(
+                {
+                    'status': 'error',
+                    'message': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )            

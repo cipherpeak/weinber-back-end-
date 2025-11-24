@@ -65,17 +65,13 @@ class HomeAPISerializer(serializers.ModelSerializer):
 
     def get_ongoing_task(self, obj):
         """Returns True if there are any ongoing tasks, False otherwise"""
-        today = timezone.now().date()
         ongoing_tasks = obj.tasks.filter(
-            task_assign_time__date=today,
             status__in=['paused', 'in_progress']
         )
         return ongoing_tasks.exists()
 
     def get_ongoing_tasks(self, obj):
-        today = timezone.now().date()
         ongoing_tasks = obj.tasks.filter(
-            task_assign_time__date=today,
             status__in=['paused', 'in_progress']
         )
         return TaskSerializer(ongoing_tasks, many=True).data
@@ -185,17 +181,27 @@ class CheckInOutSerializer(serializers.Serializer):
 
 class BreakSerializer(serializers.Serializer):
     break_type = serializers.ChoiceField(
-        choices=BreakTimer.BREAK_TYPE_CHOICES, 
-        required=True
+        choices=['lunch', 'coffee', 'stretch', 'other'],
+        required=False,allow_blank=True
     )
-    location = serializers.CharField(max_length=255, required=True)
-    reason = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-
-    def validate_break_type(self, value):
-        if value not in dict(BreakTimer.BREAK_TYPE_CHOICES):
-            raise serializers.ValidationError("Invalid break type")
-        return value    
+    custom_break_type = serializers.CharField(required=False, allow_blank=True)
+    duration = serializers.CharField(required=True)  
+    break_start_time = serializers.CharField(required=True) 
+    location = serializers.CharField(required=True)
+    reason = serializers.CharField(required=False, allow_blank=True)
     
+    def validate(self, data):
+        # If break_type is 'other', custom_break_type is required
+        if data.get('break_type') == 'other' and not data.get('custom_break_type'):
+            raise serializers.ValidationError({
+                "custom_break_type": "Custom break type is required when selecting 'Other'"
+            })
+        return data
+
+class EndBreakSerializer(serializers.Serializer):
+    break_end_time = serializers.CharField(required=True)
+    location = serializers.CharField(required=True)
+    end_reason = serializers.CharField(required=False, allow_blank=True) 
 
 
 class CompanyAnnouncementSerializer(serializers.ModelSerializer):

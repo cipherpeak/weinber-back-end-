@@ -66,6 +66,10 @@ class Employee(AbstractBaseUser, PermissionsMixin):
         ('employee', 'Employee'),
     ]
 
+    PROFESSION = [
+        ('field_service_specialist', 'Field Service Specialist'),
+    ]
+
     employeeId = models.CharField(max_length=50, unique=True)
     employee_name = models.CharField(max_length=100, blank=True, null=True)
     is_active = models.BooleanField(default=True)
@@ -107,6 +111,12 @@ class Employee(AbstractBaseUser, PermissionsMixin):
         max_length=30,
         choices=DEPARTMENT_CHOICES,
         default='service'
+    )
+
+    profession = models.CharField(
+        max_length=30,
+        choices=PROFESSION,
+        default='field_service_specialist'
     )
 
     branch_location = models.CharField(

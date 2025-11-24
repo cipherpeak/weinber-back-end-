@@ -4,6 +4,8 @@ from .models import Document, VisaDetails
 
 class EmployeeProfileSerializer(serializers.ModelSerializer):
     profile_pic = serializers.SerializerMethodField()
+    employee_type = serializers.CharField(source='get_employee_type_display')  
+    designation = serializers.CharField(source='get_designation_display')  
 
     class Meta:
         model = Employee
@@ -28,13 +30,16 @@ class EmployeeProfileSerializer(serializers.ModelSerializer):
 class EmployeeInformationSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='employee_name')
     employee_id = serializers.CharField(source='employeeId')
-    
+    profession = serializers.CharField(source='get_profession_display')  
+    department = serializers.CharField(source='get_department_display')  
+
     class Meta:
         model = Employee
         fields = [
             'full_name',
             'employee_id', 
             'department',
+            'profession',
             'branch_location',
             'company_name',
             'date_of_joining',

@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import AttendanceCheck, BreakHistory, BreakTimer, CompanyAnnouncement, Employee
-from .serializers import BreakSerializer, CheckInOutSerializer, CompanyAnnouncementSerializer, HomeAPISerializer
+from .serializers import BreakSerializer, CheckInOutSerializer, CompanyAnnouncementSerializer, EndBreakSerializer, HomeAPISerializer
 
 class HomeAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -49,15 +49,18 @@ class CheckInAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Create check-in record
+            reason = serializer.validated_data.get('reason')
+            
+            reason_to_store = reason if reason and str(reason).strip() != '' else None
+            
             checkin = AttendanceCheck.objects.create(
                 employee=employee,
                 check_type='in',
                 check_date=today,
                 check_time=serializer.validated_data['check_time'],
                 time_zone=serializer.validated_data['time_zone'],
-                location=serializer.validated_data['location']
-                # No reason for check-in
+                location=serializer.validated_data['location'],
+                reason=reason_to_store, 
             )
             
             return Response({
@@ -67,7 +70,8 @@ class CheckInAPIView(APIView):
                 "check_date": str(checkin.check_date),
                 "check_time": checkin.check_time,
                 "time_zone": checkin.time_zone,
-                "location": checkin.location
+                "location": checkin.location,
+                "reason_provided": reason_to_store is not None 
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
@@ -157,6 +161,8 @@ class CheckOutAPIView(APIView):
                 {"error": str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
 class StartBreakAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -175,7 +181,7 @@ class StartBreakAPIView(APIView):
             # Check if checked in today
             checkin_today = AttendanceCheck.objects.filter(
                 employee=employee,
-                check_time__date=today,
+                check_date=today,
                 check_type='in'
             ).exists()
             
@@ -188,7 +194,7 @@ class StartBreakAPIView(APIView):
             # Check if already checked out today
             checkout_today = AttendanceCheck.objects.filter(
                 employee=employee,
-                check_time__date=today,
+                check_date=today,
                 check_type='out'
             ).exists()
             
@@ -211,23 +217,25 @@ class StartBreakAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Create break record WITH reason
-            break_timer = BreakTimer.objects.create(
-                employee=employee,
-                break_type=serializer.validated_data['break_type'],
-                break_start_time=timezone.now(),
-                date=today,
-                duration=timezone.timedelta(0),
-                reason=serializer.validated_data.get('reason', '')  
-            )
+            break_data = {
+                'employee': employee,
+                'break_type': serializer.validated_data['break_type'],
+                'duration': serializer.validated_data['duration'],
+                'break_start_time': serializer.validated_data['break_start_time'],
+                'date': today,  
+                'location': serializer.validated_data['location'],
+                'reason': serializer.validated_data.get('reason', '')
+            }
+            
+            # Add custom break type if provided
+            if serializer.validated_data['break_type'] == '':
+                break_data['custom_break_type'] = serializer.validated_data.get('custom_break_type', '')
+            
+            break_timer = BreakTimer.objects.create(**break_data)
             
             return Response({
                 "status": "success",
                 "message": "Break started successfully",
-                "break_type": break_timer.break_type,
-                "break_start_time": break_timer.break_start_time,
-                "location": serializer.validated_data['location'],
-                "reason": break_timer.reason  # Include reason in response
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
@@ -241,11 +249,10 @@ class EndBreakAPIView(APIView):
     
     def post(self, request):
         try:
-            # For end break, we don't need reason, only location
-            location = request.data.get('location', '')
-            if not location:
+            serializer = EndBreakSerializer(data=request.data)
+            if not serializer.is_valid():
                 return Response(
-                    {"error": "Location is required"}, 
+                    {"error": serializer.errors}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
@@ -265,26 +272,14 @@ class EndBreakAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Calculate duration and update break
-            end_time = timezone.now()
-            duration = end_time - active_break.break_start_time
-            
-            active_break.break_end_time = end_time
-            active_break.duration = duration
+            active_break.break_end_time = serializer.validated_data['break_end_time']
+            active_break.location = serializer.validated_data['location']
+            active_break.end_reason = serializer.validated_data.get('end_reason', '')  
             active_break.save()
-            
-            # Update break history
-            self.update_break_history(employee, today, active_break.break_type, duration)
             
             return Response({
                 "status": "success",
                 "message": "Break ended successfully",
-                "break_type": active_break.break_type,
-                "break_start_time": active_break.break_start_time,
-                "break_end_time": active_break.break_end_time,
-                "duration": str(duration),
-                "location": location,
-                "reason": active_break.reason  # Return the reason from start
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
@@ -292,95 +287,6 @@ class EndBreakAPIView(APIView):
                 {"error": str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    
-    def update_break_history(self, employee, date, break_type, duration):
-        """Update break history for the employee"""
-        break_history, created = BreakHistory.objects.get_or_create(
-            employee=employee,
-            date=date,
-            defaults={
-                'total_break_time': duration,
-                'number_of_scheduled_breaks': 1 if break_type == 'scheduled' else 0
-            }
-        )
-        
-        if not created:
-            break_history.total_break_time += duration
-            if break_type == 'scheduled':
-                break_history.number_of_scheduled_breaks += 1
-            break_history.save()
-    permission_classes = [IsAuthenticated]
-    
-    def post(self, request):
-        try:
-            serializer = CheckInOutSerializer(data=request.data)
-            if not serializer.is_valid():
-                return Response(
-                    {"error": serializer.errors}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            employee = request.user
-            today = timezone.now().date()
-            
-            # Get active break (break without end time)
-            active_break = BreakTimer.objects.filter(
-                employee=employee,
-                date=today,
-                break_end_time__isnull=True  
-            ).first()
-            
-            if not active_break:
-                return Response(
-                    {"error": "No active break found"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Calculate duration and update break
-            end_time = timezone.now()
-            duration = end_time - active_break.break_start_time
-            
-            active_break.break_end_time = end_time
-            active_break.duration = duration
-            active_break.save()
-            
-            # Update break history
-            self.update_break_history(employee, today, active_break.break_type, duration)
-            
-            return Response({
-                "status": "success",
-                "message": "Break ended successfully",
-                "break_type": active_break.break_type,
-                "break_start_time": active_break.break_start_time,
-                "break_end_time": active_break.break_end_time,
-                "duration": str(duration),
-                "location": serializer.validated_data['location']
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {"error": str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    def update_break_history(self, employee, date, break_type, duration):
-        """Update break history for the employee"""
-        break_history, created = BreakHistory.objects.get_or_create(
-            employee=employee,
-            date=date,
-            defaults={
-                'total_break_time': duration,
-                'number_of_scheduled_breaks': 1 if break_type == 'scheduled' else 0
-            }
-        )
-        
-        if not created:
-            break_history.total_break_time += duration
-            if break_type == 'scheduled':
-                break_history.number_of_scheduled_breaks += 1
-            break_history.save()
-
-
 class CompanyAnnouncementListAPIView(APIView):
     permission_classes = [IsAuthenticated]
     

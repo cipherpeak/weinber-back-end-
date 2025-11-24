@@ -26,7 +26,6 @@ class AttendanceCheck(models.Model):
         return f"{self.employee.employeeId} - {self.check_type} - {self.check_date}"
     
     def save(self, *args, **kwargs):
-        # Auto-set check_date to today if not provided
         if not self.check_date:
             self.check_date = timezone.now().date()
         super().save(*args, **kwargs)
@@ -34,21 +33,32 @@ class AttendanceCheck(models.Model):
 
 class BreakTimer(models.Model):
     BREAK_TYPE_CHOICES = [
-        ('scheduled', 'Scheduled Break'),
-        ('unscheduled', 'Unscheduled Break'),
         ('lunch', 'Lunch Break'),
+        ('coffee', 'Coffee Break'),
+        ('stretch', 'Stretch Break'),
+        ('other', 'Other'),
     ]
     
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='break_timers')
     break_type = models.CharField(max_length=20, choices=BREAK_TYPE_CHOICES)
-    duration = models.DurationField(blank=True, null=True)  
-    break_start_time = models.DateTimeField()
-    break_end_time = models.DateTimeField(blank=True, null=True)
-    date = models.DateField(auto_now_add=True)
-    reason = models.TextField(blank=True, null=True)  
+    custom_break_type = models.CharField(max_length=100, blank=True, null=True)  
+    duration = models.CharField(max_length=20,default="10 min")  
+    break_start_time = models.CharField(max_length=50) 
+    break_end_time = models.CharField(max_length=50, blank=True, null=True) 
+    date = models.DateField(auto_now_add=True) 
+    reason = models.TextField(blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    end_reason = models.TextField(blank=True, null=True) 
 
     def __str__(self):
-        return f"{self.employee.employeeId} - {self.break_type}"
+        return f"{self.employee.employeeId} - {self.get_break_type_display()}"
+
+    @property
+    def display_break_type(self):
+        """Return custom break type if break_type is 'other', otherwise the display name"""
+        if self.break_type == '' and self.custom_break_type:
+            return self.custom_break_type
+        return self.get_break_type_display()
     
 
 class BreakHistory(models.Model):
@@ -80,6 +90,8 @@ class CompanyAnnouncement(models.Model):
 
     def __str__(self):
         return self.heading
+
+
 
 
 

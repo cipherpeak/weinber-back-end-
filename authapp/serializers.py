@@ -8,7 +8,8 @@ class EmployeeLoginSerializer(serializers.Serializer):
 class EmployeeSerializer(serializers.ModelSerializer):
     profile_pic = serializers.SerializerMethodField()
     app_icon = serializers.SerializerMethodField()
-    
+    employee_type = serializers.CharField(source='get_employee_type_display')  
+
     class Meta:
         model = Employee
         fields = ['employeeId', 'employee_type', 'profile_pic', 'app_icon']

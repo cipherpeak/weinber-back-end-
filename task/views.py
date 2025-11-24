@@ -255,16 +255,16 @@ class PendingTasksAPIView(APIView):
             user = request.user
             today = timezone.now().date()
             
-            # Get pending tasks (tasks that are not completed/delivered and assigned today or before)
+           
             pending_tasks = Task.objects.filter(
                 employee=user,
                 status__in=['not_started', 'paused', 'in_progress', 'on_hold'],
-                task_assign_time__date__lte=today  # Tasks assigned today or before
+                task_assign_time__date__lte=today  
             ).exclude(
                 status__in=['completed', 'delivered', 'returned']
             ).order_by('task_assign_time')
-            
-            # Apply filters if provided
+
+
             status_filter = request.query_params.get('status')
             task_type_filter = request.query_params.get('task_type')
             icon_type_filter = request.query_params.get('icon_type')
@@ -276,7 +276,6 @@ class PendingTasksAPIView(APIView):
             if icon_type_filter:
                 pending_tasks = pending_tasks.filter(icon_type=icon_type_filter)
             
-            # Separate into two categories based on your screenshot
             pending_task_list = pending_tasks.filter(
                 Q(status='in_progress') | Q(percentage_completed__gt=0)
             )

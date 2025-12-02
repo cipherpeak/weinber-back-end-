@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; margin-top: 0.25rem;">
+        <h3 style="margin-bottom: 0; color: #212529; font-size: 1.5rem; font-weight: 600;">Employee Management</h3>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'create-employee' %}" style="display: flex; align-items: center; gap: 0.5rem; background-color: #007bff; border: 1px solid #007bff; color: white; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; text-decoration: none; transition: all 0.2s ease;">
+                <i class="material-symbols-outlined" style="font-size: 16px; color: white;">person_add</i>
+                Add Employee
+            </a>
+        </div>
+    </div>
+
+    <!-- Display Messages -->
+    {% if messages %}
+    <div style="margin-bottom: 1.5rem;">
+        {% for message in messages %}
+        <div role="alert" style="border: none; border-radius: 8px; {% if message.tags == 'success' %}background-color: #d1f2eb; color: #0f5132;{% elif message.tags == 'error' or message.tags == 'danger' %}background-color: #f8d7da; color: #721c24;{% elif message.tags == 'warning' %}background-color: #fff3cd; color: #856404;{% elif message.tags == 'info' %}background-color: #d1ecf1; color: #0c5460;{% endif %} padding: 1rem; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center;">
+                <i class="material-symbols-outlined" style="margin-right: 0.5rem; font-size: 16px;">
+                    {% if message.tags == 'success' %}check_circle{% endif %}
+                    {% if message.tags == 'error' or message.tags == 'danger' %}error{% endif %}
+                    {% if message.tags == 'warning' %}warning{% endif %}
+                    {% if message.tags == 'info' %}info{% endif %}
+                </i>
+                <span style="font-weight: 500;">{{ message }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Search and Filters -->
+    <div style="background-color: white; border-radius: 10px; border: 1px solid white; margin-bottom: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+        <div style="padding: 1.5rem;">
+            <div style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem; align-items: flex-end; gap: 1rem;">
+                <div style="flex: 0 0 calc(33.333% - 1rem); max-width: calc(33.333% - 1rem); padding-right: 0.75rem; padding-left: 0.75rem;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Search</label>
+                    <form method="GET" action="" style="position: relative;">
+                        <input type="text" name="search" placeholder="Search employees..." value="{{ request.GET.search }}" style="display: block; width: 100%; padding: 10px 12px 10px 40px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                        <div style="position: absolute; top: 50%; left: 0; transform: translateY(-50%); background: transparent; border: 0; margin-left: 12px;">
+                            <i class="material-symbols-outlined" style="color: #212529; font-size: 20px;">search</i>
+                        </div>
+                    </form>
+                </div>
+                <div style="flex: 0 0 calc(16.666% - 1rem); max-width: calc(16.666% - 1rem); padding-right: 0.75rem; padding-left: 0.75rem;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Department</label>
+                    <select name="department" onchange="this.form.submit()" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="%23212529" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;">
+                        <option value="">All Departments</option>
+                        {% for dept in department_choices %}
+                        <option value="{{ dept.0 }}" {% if request.GET.department == dept.0 %}selected{% endif %}>{{ dept.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="flex: 0 0 calc(16.666% - 1rem); max-width: calc(16.666% - 1rem); padding-right: 0.75rem; padding-left: 0.75rem;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Status</label>
+                    <select name="status" onchange="this.form.submit()" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="%23212529" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;">
+                        <option value="">All Status</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div style="flex: 0 0 calc(33.333% - 1rem); max-width: calc(33.333% - 1rem); padding-right: 0.75rem; padding-left: 0.75rem;">
+                    <div style="display: flex; gap: 0.5rem; height: 100%;">
+                        <button type="submit" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #007bff; border: 1px solid #007bff; color: white; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; width: 100%; cursor: pointer; transition: all 0.2s ease;">
+                            <i class="material-symbols-outlined" style="font-size: 16px; color: white;">filter_alt</i>
+                            Apply Filters
+                        </button>
+                        <a href="{% url 'employee-manage' %}" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: white; border: 1px solid #6c757d; color: #6c757d; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; width: 100%; text-decoration: none; transition: all 0.2s ease;">
+                            <i class="material-symbols-outlined" style="font-size: 16px;">refresh</i>
+                            Reset
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employees Table -->
+    <div style="background-color: white; border-radius: 10px; border: 1px solid white; margin-bottom: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+        <div style="padding: 0;">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; background-color: #ffffff; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa !important; text-align: left;">Employee ID</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa !important; text-align: left;">Employee</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa !important; text-align: left;">Email</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa !important; text-align: left;">Phone</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa !important; text-align: left;">Department</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa !important; text-align: left;">Designation</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa !important; text-align: left;">Status</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa !important; text-align: left;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in employees %}
+                        <tr style="background-color: #ffffff !important;">
+                            <td style="color: #212529; font-weight: 500; border-bottom: 1px solid #e9ecef; vertical-align: middle; padding: 16px 12px; background-color: #ffffff !important;">{{ employee.employeeId }}</td>
+                            <td style="border-bottom: 1px solid #e9ecef; vertical-align: middle; padding: 16px 12px; background-color: #ffffff !important;">
+                                <div style="display: flex; align-items: center;">
+                                    {% if employee.profile_pic %}
+                                        <img src="{{ employee.profile_pic.url }}" style="border-radius: 50%; margin-right: 0.5rem; width: 35px; height: 35px;" alt="{{ employee.employee_name }}">
+                                    {% else %}
+                                        <div style="border-radius: 50%; background-color: #6c757d; display: flex; align-items: center; justify-content: center; margin-right: 0.5rem; width: 35px; height: 35px;">
+                                            <span style="color: white; font-weight: bold; font-size: 0.875rem;">{{ employee.employee_name|default:employee.employeeId|first|upper }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div style="font-weight: 500; color: #212529; font-size: 0.875rem;">{{ employee.employee_name|default:"Not Set" }}</div>
+                                        <small style="color: #6c757d;">{{ employee.employeeId }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="color: #212529; border-bottom: 1px solid #e9ecef; vertical-align: middle; padding: 16px 12px; background-color: #ffffff !important;">
+                                {% if employee.email %}
+                                    <a href="mailto:{{ employee.email }}" style="color: #007bff; text-decoration: none;">{{ employee.email }}</a>
+                                {% else %}
+                                    <span style="color: #6c757d;">Not set</span>
+                                {% endif %}
+                            </td>
+                            <td style="color: #212529; border-bottom: 1px solid #e9ecef; vertical-align: middle; padding: 16px 12px; background-color: #ffffff !important;">
+                                {{ employee.mobile_number|default:"Not set" }}
+                            </td>
+                            <td style="color: #212529; border-bottom: 1px solid #e9ecef; vertical-align: middle; padding: 16px 12px; background-color: #ffffff !important;">
+                                {{ employee.get_department_display|default:"Not set" }}
+                            </td>
+                            <td style="color: #212529; border-bottom: 1px solid #e9ecef; vertical-align: middle; padding: 16px 12px; background-color: #ffffff !important;">
+                                {{ employee.get_designation_display|default:"Not set" }}
+                            </td>
+                            <td style="border-bottom: 1px solid #e9ecef; vertical-align: middle; padding: 16px 12px; background-color: #ffffff !important;">
+                                {% if employee.is_active %}
+                                    <span style="background-color: rgba(25, 135, 84, 0.1); color: #198754; border: 1px solid rgba(25, 135, 84, 0.25); border-radius: 50rem; padding: 4px 12px; font-size: 12px; font-weight: 500;">Active</span>
+                                {% else %}
+                                    <span style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.25); border-radius: 50rem; padding: 4px 12px; font-size: 12px; font-weight: 500;">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td style="border-bottom: 1px solid #e9ecef; vertical-align: middle; padding: 16px 12px; background-color: #ffffff !important;">
+                                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                    <!-- View Button -->
+                                    <a href="{% url 'employee-details' employee.id %}" 
+                                       style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: white; border: 1px solid #007bff; color: #007bff; border-radius: 6px; font-weight: 500; padding: 8px 12px; font-size: 14px; text-decoration: none; transition: all 0.2s ease;"
+                                       title="View Details">
+                                        <i class="material-symbols-outlined" style="font-size: 16px;">visibility</i>
+                                        <span style="display: none;">View</span>
+                                    </a>
+                                    
+                                    <!-- Edit Button -->
+                                    <a href="{% url 'edit-employee' employee.id %}" 
+                                       style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: white; border: 1px solid #6c757d; color: #6c757d; border-radius: 6px; font-weight: 500; padding: 8px 12px; font-size: 14px; text-decoration: none; transition: all 0.2s ease;"
+                                       title="Edit Employee">
+                                        <i class="material-symbols-outlined" style="font-size: 16px;">edit</i>
+                                        <span style="display: none;">Edit</span>
+                                    </a>
+
+                                    <!-- Delete Button -->
+                                    <button style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: white; border: 1px solid #dc3545; color: #dc3545; border-radius: 6px; font-weight: 500; padding: 8px 12px; font-size: 14px; cursor: pointer; transition: all 0.2s ease;"
+                                            title="Delete Employee"
+                                            onclick="showDeleteModal('{{ employee.id }}', '{{ employee.employee_name|default:employee.employeeId|escapejs }}')">
+                                        <i class="material-symbols-outlined" style="font-size: 16px;">delete</i>
+                                        <span style="display: none;">Delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr style="background-color: #ffffff !important;">
+                            <td colspan="8" style="text-align: center; padding: 4rem 1rem; background-color: #ffffff !important;">
+                                <div style="color: #6c757d;">
+                                    <i class="material-symbols-outlined" style="font-size: 48px; color: #212529; display: block; margin-bottom: 1rem;">people_alt</i>
+                                    <p style="margin: 0.5rem 0; color: #212529;">No employees found.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div style="display: flex; justify-content: center; align-items: center; text-align: center; flex-wrap: wrap; gap: 0.5rem; padding: 1.25rem 1.25rem; background-color: #ffffff; border-top: 1px solid #e9ecef;">
+                <span style="font-size: 0.9375rem; color: #212529;">
+                    Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} employees
+                </span>
+                <nav aria-label="Page navigation">
+                    <ul style="display: flex; padding-left: 0; list-style: none; margin-bottom: 0; gap: 0.25rem;">
+                        {% if page_obj.has_previous %}
+                        <li>
+                            <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous" style="display: block; padding: 0.5rem 0.75rem; margin-left: -1px; line-height: 1.25; color: #007bff; text-decoration: none; background-color: #fff; border: 1px solid #dee2e6; border-radius: 0.25rem;">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li>
+                            <a href="#" style="display: block; padding: 0.5rem 0.75rem; margin-left: -1px; line-height: 1.25; color: #fff; text-decoration: none; background-color: #007bff; border: 1px solid #007bff; border-radius: 0.25rem; z-index: 3;">{{ num }}</a>
+                        </li>
+                        {% else %}
+                        <li>
+                            <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" style="display: block; padding: 0.5rem 0.75rem; margin-left: -1px; line-height: 1.25; color: #007bff; text-decoration: none; background-color: #fff; border: 1px solid #dee2e6; border-radius: 0.25rem;">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li>
+                            <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next" style="display: block; padding: 0.5rem 0.75rem; margin-left: -1px; line-height: 1.25; color: #007bff; text-decoration: none; background-color: #fff; border: 1px solid #dee2e6; border-radius: 0.25rem;">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteEmployeeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1050; align-items: center; justify-content: center;">
+    <div style="background-color: white; border-radius: 10px; max-width: 500px; width: 90%; margin: auto; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);">
+        <div style="background-color: white; border: 0; padding-bottom: 0; padding-top: 1rem; padding-left: 1.5rem; padding-right: 1.5rem;">
+            <h5 style="color: #212529; margin-bottom: 0; font-size: 1.25rem; font-weight: 500;">
+                <i class="material-symbols-outlined" style="margin-right: 0.5rem; font-size: 16px; color: #dc3545;">warning</i>
+                Delete Employee
+            </h5>
+            <button type="button" onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; color: #6c757d; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+        </div>
+        <div style="background-color: white; padding-left: 1.5rem; padding-right: 1.5rem; padding-top: 0;">
+            <p style="color: #6c757d; margin-bottom: 1rem;">Are you sure you want to delete this employee? This action cannot be undone.</p>
+            <div style="background-color: #f8f9fa; border-radius: 8px; padding: 0.75rem;">
+                <strong id="employeeToDelete" style="color: #212529;"></strong>
+            </div>
+        </div>
+        <div style="background-color: white; border: 0; padding-top: 1rem; padding-left: 1.5rem; padding-right: 1.5rem; padding-bottom: 1.5rem;">
+            <div style="display: flex; flex-wrap: wrap; margin-right: -0.5rem; margin-left: -0.5rem;">
+                <div style="flex: 0 0 50%; max-width: 50%; padding-right: 0.5rem; padding-left: 0.5rem;">
+                    <button type="button" onclick="closeModal()" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: white; border: 1px solid #6c757d; color: #6c757d; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; width: 100%; cursor: pointer; transition: all 0.2s ease;">
+                        <i class="material-symbols-outlined" style="font-size: 16px;">close</i>
+                        Cancel
+                    </button>
+                </div>
+                <div style="flex: 0 0 50%; max-width: 50%; padding-right: 0.5rem; padding-left: 0.5rem;">
+                    <button type="button" onclick="confirmDelete()" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #dc3545; border: 1px solid #dc3545; color: white; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; width: 100%; cursor: pointer; transition: all 0.2s ease;">
+                        <i class="material-symbols-outlined" style="font-size: 16px; color: white;">delete</i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentEmployeeId = null;
+
+function showDeleteModal(employeeId, employeeName) {
+    currentEmployeeId = employeeId;
+    document.getElementById('employeeToDelete').textContent = employeeName || `Employee ID: ${employeeId}`;
+    
+    const modal = document.getElementById('deleteEmployeeModal');
+    modal.style.display = 'flex';
+}
+
+function closeModal() {
+    const modal = document.getElementById('deleteEmployeeModal');
+    modal.style.display = 'none';
+    currentEmployeeId = null;
+}
+
+function confirmDelete() {
+    if (currentEmployeeId) {
+        deleteEmployee(currentEmployeeId);
+    }
+}
+
+function deleteEmployee(employeeId) {
+    const deleteBtn = document.querySelector('#deleteEmployeeModal button:last-child');
+    const originalText = deleteBtn.innerHTML;
+    
+    deleteBtn.innerHTML = '<span style="display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>Deleting...';
+    deleteBtn.disabled = true;
+
+    fetch(`/delete-employee/${employeeId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Employee deleted successfully!', 'success');
+            closeModal();
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            throw new Error(data.error || 'Failed to delete employee');
+        }
+    })
+    .catch(error => {
+        showToast(error.message || 'Failed to delete employee', 'error');
+        deleteBtn.innerHTML = originalText;
+        deleteBtn.disabled = false;
+    });
+}
+
+// CSRF Token function
+function getCsrfToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        border: none;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        ${type === 'success' ? 'background-color: #d1f2eb; color: #0f5132;' : ''}
+        ${type === 'error' ? 'background-color: #f8d7da; color: #721c24;' : ''}
+        ${type === 'warning' ? 'background-color: #fff3cd; color: #856404;' : ''}
+        ${type === 'info' ? 'background-color: #d1ecf1; color: #0c5460;' : ''}
+    `;
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <i class="material-symbols-outlined" style="margin-right: 0.5rem; font-size: 16px;">
+                ${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info'}
+            </i>
+            <span style="font-weight: 500;">${message}</span>
+        </div>
+        <button type="button" onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 0.875rem; opacity: 0.5; cursor: pointer; padding: 0.25rem; margin-left: auto;">×</button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+// Add hover effects via JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to buttons
+    const buttons = document.querySelectorAll('button, a.btn-style');
+    buttons.forEach(btn => {
+        if (btn.style.backgroundColor === 'rgb(0, 123, 255)') {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.backgroundColor = '#0056b3';
+                btn.style.borderColor = '#0056b3';
+                btn.style.transform = 'translateY(-1px)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.backgroundColor = '#007bff';
+                btn.style.borderColor = '#007bff';
+                btn.style.transform = 'translateY(0)';
+            });
+        } else if (btn.style.borderColor === 'rgb(108, 117, 125)') {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.backgroundColor = '#6c757d';
+                btn.style.borderColor = '#6c757d';
+                btn.style.color = 'white';
+                btn.style.transform = 'translateY(-1px)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.backgroundColor = 'white';
+                btn.style.borderColor = '#6c757d';
+                btn.style.color = '#6c757d';
+                btn.style.transform = 'translateY(0)';
+            });
+        } else if (btn.style.borderColor === 'rgb(220, 53, 69)') {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.backgroundColor = '#dc3545';
+                btn.style.borderColor = '#dc3545';
+                btn.style.color = 'white';
+                btn.style.transform = 'translateY(-1px)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.backgroundColor = 'white';
+                btn.style.borderColor = '#dc3545';
+                btn.style.color = '#dc3545';
+                btn.style.transform = 'translateY(0)';
+            });
+        }
+    });
+
+    // Add hover effects to table rows
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', () => {
+            row.style.backgroundColor = '#f8f9fa';
+        });
+        row.addEventListener('mouseleave', () => {
+            row.style.backgroundColor = '#ffffff';
+        });
+    });
+
+    // Form controls focus effect
+    const formControls = document.querySelectorAll('input, select, textarea');
+    formControls.forEach(control => {
+        control.addEventListener('focus', () => {
+            control.style.borderColor = '#007bff';
+            control.style.boxShadow = '0 0 0 0.2rem rgba(0, 123, 255, 0.1)';
+        });
+        control.addEventListener('blur', () => {
+            control.style.borderColor = '#dee2e6';
+            control.style.boxShadow = 'none';
+        });
+    });
+});
+
+// Add CSS animation for spinner
+const style = document.createElement('style');
+style.textContent = `
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+`;
+document.head.appendChild(style);
+
+// Close modal when clicking outside
+document.getElementById('deleteEmployeeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

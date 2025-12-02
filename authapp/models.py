@@ -225,3 +225,11 @@ class Employee(AbstractBaseUser, PermissionsMixin):
     
     def is_employee(self):
         return self.role == 'employee'
+    
+
+
+
+
+
+
+    

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zxx">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Load static files -->
+    {% load static %}
+
+    <!-- Links Of CSS File -->
+    <link rel="stylesheet" href="{% static 'assets/css/sidebar-menu.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/simplebar.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/prism.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/quill.snow.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/remixicon.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/swiper-bundle.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/jsvectormap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'assets/images/favicon.png' %}">
+        
+    <!-- Title -->
+    <title>weinber-login</title>
+    
+    <style>
+        /* Toast Notification Styles */
+        .toast {
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .toast-success {
+            background-color: #10b981 !important;
+        }
+
+        .toast-error {
+            background-color: #ef4444 !important;
+        }
+
+        .toast-warning {
+            background-color: #f59e0b !important;
+        }
+
+        .toast-info {
+            background-color: #3b82f6 !important;
+        }
+
+        .toast-body {
+            padding: 12px 16px;
+        }
+
+        /* Toast animations */
+        .toast.show {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .toast.hiding {
+            animation: slideOutRight 0.3s ease-in;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-body-bg">
+    
+    <!-- Start Preloader Area -->
+    <div class="preloader" id="preloader">
+        <div class="preloader">
+            <div class="waviy position-relative">
+                    <span class="d-inline-block">w</span>
+                    <span class="d-inline-block">E</span>
+                    <span class="d-inline-block">I</span>
+                    <span class="d-inline-block">N</span>
+                    <span class="d-inline-block">B</span>
+                    <span class="d-inline-block">E</span>
+                    <span class="d-inline-block">R</span>
+            </div>
+        </div>
+    </div>
+    <!-- End Preloader Area -->
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="toast align-items-center text-white bg-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <div class="d-flex align-items-center">
+                            <i class="material-symbols-outlined me-2 fs-16">
+                                {% if message.tags == 'success' %}check_circle{% endif %}
+                                {% if message.tags == 'error' or message.tags == 'danger' %}error{% endif %}
+                                {% if message.tags == 'warning' %}warning{% endif %}
+                                {% if message.tags == 'info' %}info{% endif %}
+                            </i>
+                            {{ message }}
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="container-fluid">
+        <div class="main-content d-flex flex-column p-0">
+            <div class="m-lg-auto my-auto w-930 py-4">
+                <div class="card bg-white border rounded-10 border-white py-100 px-130">
+                    <div class="p-md-5 p-4 p-lg-0">
+                        <div class="text-center mb-4">
+                            <!-- Logo Section - Added above Sign In heading -->
+                            <div class="logo-container mb-3">
+                                <img src="{% static 'assets/images/WEINBER Logo-Final copy-1.png' %}" alt="Weinber Logo" class="login-logo" style="max-height: 60px;">
+                            </div>
+                            <h3 class="fs-26 fw-medium" style="margin-bottom: 6px;">Sign In</h3>
+                        </div>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-20">
+                                <label class="label fs-16 mb-2">Email Address</label>
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" id="floatingInput1" placeholder="Enter email address *" name="email" value="{{ request.POST.email }}" required>
+                                    <label for="floatingInput1">Enter email address *</label>
+                                </div>
+                            </div>
+                            <div class="mb-20">
+                                <label class="label fs-16 mb-2">Your Password</label>
+                                <div class="form-group" id="password-show-hide">
+                                    <div class="password-wrapper position-relative password-container">
+                                        <input type="password" class="form-control text-secondary password" placeholder="Enter password *" name="password" required>
+                                        <i style="color: #A9A9C8; font-size: 22px; right: 15px;" class="ri-eye-off-line toggle-password translate-middle-y top-50 position-absolute cursor text-secondary" aria-hidden="true"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-20">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="1" id="flexCheckDefault" name="remember_me">
+                                        <label class="form-check-label fs-16" for="flexCheckDefault">
+                                            Remember me
+                                        </label>
+                                    </div>
+                                    <a href="forgot-password.html" class="fs-16 text-primary fw-normal text-decoration-none">Forgot Password?</a>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <button type="submit" class="btn btn-primary fw-normal text-white w-100" style="padding-top: 18px; padding-bottom: 18px;">Sign In</button>
+                            </div>
+                        </form> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link Of JS File -->
+    <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+    <script src="{% static 'assets/js/quill.min.js' %}"></script>
+    <script src="{% static 'assets/js/data-table.js' %}"></script>
+    <script src="{% static 'assets/js/prism.js' %}"></script>
+    <script src="{% static 'assets/js/clipboard.min.js' %}"></script>
+    <script src="{% static 'assets/js/simplebar.min.js' %}"></script>
+    <script src="{% static 'assets/js/apexcharts.min.js' %}"></script>
+    <script src="{% static 'assets/js/echarts.min.js' %}"></script>
+    <script src="{% static 'assets/js/swiper-bundle.min.js' %}"></script>
+    <script src="{% static 'assets/js/fullcalendar.main.js' %}"></script>
+    <script src="{% static 'assets/js/jsvectormap.min.js' %}"></script>
+    <script src="{% static 'assets/js/world-merc.js' %}"></script>
+    <script src="{% static 'assets/js/custom/apexcharts.js' %}"></script>
+    <script src="{% static 'assets/js/custom/echarts.js' %}"></script>
+    <script src="{% static 'assets/js/custom/maps.js' %}"></script>
+    <script src="{% static 'assets/js/custom/custom.js' %}"></script>
+
+    <!-- Password Show/Hide Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const togglePassword = document.querySelector('.toggle-password');
+            
+            togglePassword.addEventListener('click', function() {
+                console.log("Password toggle clicked");
+                
+                // Find the password input field
+                const passwordInput = this.parentElement.querySelector('.password');
+                
+                // Toggle the password field type
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    this.classList.remove('ri-eye-off-line');
+                    this.classList.add('ri-eye-line');
+                } else {
+                    passwordInput.type = 'password';
+                    this.classList.remove('ri-eye-line');
+                    this.classList.add('ri-eye-off-line');
+                }
+            });
+        });
+    </script>
+
+    <!-- Toast Notification System -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all toasts
+            const toastElList = document.querySelectorAll('.toast');
+            const toastList = [...toastElList].map(toastEl => {
+                const toast = new bootstrap.Toast(toastEl, {
+                    autohide: true,
+                    delay: 5000
+                });
+                toast.show();
+                return toast;
+            });
+
+            // Auto-hide toasts after delay
+            toastList.forEach(toast => {
+                toast._element.addEventListener('hidden.bs.toast', function() {
+                    this.remove();
+                });
+            });
+
+            // Global function to show custom toasts
+            window.showToast = function(message, type = 'success') {
+                const toastContainer = document.querySelector('.toast-container');
+                const toastId = 'toast-' + Date.now();
+                
+                const toastHTML = `
+                    <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <div class="d-flex align-items-center">
+                                    <i class="material-symbols-outlined me-2 fs-16">
+                                        ${getToastIcon(type)}
+                                    </i>
+                                    ${message}
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                `;
+                
+                toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+                
+                const toastElement = document.getElementById(toastId);
+                const toast = new bootstrap.Toast(toastElement, {
+                    autohide: true,
+                    delay: 5000
+                });
+                
+                toast.show();
+                
+                toastElement.addEventListener('hidden.bs.toast', function() {
+                    this.remove();
+                });
+            };
+
+            function getToastIcon(type) {
+                const icons = {
+                    'success': 'check_circle',
+                    'error': 'error',
+                    'warning': 'warning',
+                    'info': 'info',
+                    'danger': 'error'
+                };
+                return icons[type] || 'info';
+            }
+        });
+    </script>
+</body>
+</html>

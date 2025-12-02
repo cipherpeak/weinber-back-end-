@@ -22,7 +22,8 @@ class VisaDetails(models.Model):
     
     passport_number = models.CharField(max_length=100, blank=True, null=True)
     passport_expiry_date = models.DateField(blank=True, null=True)
-    
+
+    emirates_id_number = models.CharField(max_length=100, blank=True, null=True)
     emirates_id_expiry = models.DateField(blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)

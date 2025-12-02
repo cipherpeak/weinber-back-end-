@@ -1,0 +1,612 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 mt-1" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; margin-top: 0.25rem;">
+        <h3 class="mb-0 text-dark" style="margin-bottom: 0; color: #212529;">Create New Task</h3>
+        <div class="d-flex gap-2" style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'task-dashboard-list' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="display: flex; align-items: center; gap: 0.5rem; background-color: white; border: 1px solid #6c757d; color: #6c757d; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; text-decoration: none; transition: all 0.2s ease;">
+                <i class="material-symbols-outlined fs-16" style="font-size: 16px;">arrow_back</i>
+                Back to Tasks
+            </a>
+        </div>
+    </div>
+
+    <!-- Display Messages -->
+    {% if messages %}
+    <div class="mb-4" style="margin-bottom: 1.5rem;">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show rounded-8" role="alert" style="border: none; border-radius: 8px; {% if message.tags == 'success' %}background-color: #d1f2eb; color: #0f5132;{% elif message.tags == 'error' or message.tags == 'danger' %}background-color: #f8d7da; color: #721c24;{% elif message.tags == 'warning' %}background-color: #fff3cd; color: #856404;{% elif message.tags == 'info' %}background-color: #d1ecf1; color: #0c5460;{% endif %} padding: 1rem; margin-bottom: 0.5rem;">
+            <div class="d-flex align-items-center" style="display: flex; align-items: center;">
+                <i class="material-symbols-outlined me-2 fs-16" style="margin-right: 0.5rem; font-size: 16px;">
+                    {% if message.tags == 'success' %}check_circle{% endif %}
+                    {% if message.tags == 'error' or message.tags == 'danger' %}error{% endif %}
+                    {% if message.tags == 'warning' %}warning{% endif %}
+                    {% if message.tags == 'info' %}info{% endif %}
+                </i>
+                <span class="fw-medium" style="font-weight: 500;">{{ message }}</span>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="background: transparent; border: none; font-size: 0.875rem; opacity: 0.5; cursor: pointer; padding: 0.25rem; margin-left: auto;">×</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card bg-white rounded-10 border border-white mb-4" style="background-color: white; border-radius: 10px; border: 1px solid white; margin-bottom: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+        <div class="card-body" style="padding: 1.5rem;">
+            <form method="POST" action="" enctype="multipart/form-data" id="taskForm">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="border-bottom pb-4 mb-4" style="border-bottom: 1px solid #e9ecef !important; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                    <h5 class="text-dark mb-3" style="color: #212529; margin-bottom: 1rem;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary" style="margin-right: 0.5rem; font-size: 16px; color: #007bff;">assignment</i>
+                        Basic Information
+                    </h5>
+                    <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                        <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Employee <span class="text-danger" style="color: #dc3545;">*</span></label>
+                                <select name="employee" class="form-select bg-white" required style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="%23212529" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;">
+                                    <option value="">Select Employee</option>
+                                    {% for emp in employees %}
+                                    <option value="{{ emp.id }}">{{ emp.employeeId }} - {{ emp.employee_name|default:"N/A" }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Task Type <span class="text-danger" style="color: #dc3545;">*</span></label>
+                                <select name="task_type" class="form-select bg-white" id="taskType" required style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="%23212529" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;">
+                                    <option value="">Select Task Type</option>
+                                    {% for type in task_type_choices %}
+                                    <option value="{{ type.0 }}">{{ type.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                        <div class="col-md-8" style="flex: 0 0 66.666667%; max-width: 66.666667%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Task Heading <span class="text-danger" style="color: #dc3545;">*</span></label>
+                                <input type="text" name="heading" class="form-control bg-white" placeholder="Enter task heading" required style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                        <div class="col-md-4" style="flex: 0 0 33.333333%; max-width: 33.333333%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Priority</label>
+                                <select name="priority" class="form-select bg-white" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="%23212529" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;">
+                                    {% for priority in priority_choices %}
+                                    <option value="{{ priority.0 }}" {% if priority.0 == 'medium' %}selected{% endif %}>{{ priority.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" style="margin-bottom: 1rem;">
+                        <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Description</label>
+                        <textarea name="description" class="form-control bg-white" rows="3" placeholder="Enter task description" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; resize: vertical; min-height: 120px;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Task Specific Sections -->
+                <div id="deliverySection" class="task-specific-section" style="display: none; transition: all 0.3s ease;">
+                    <div class="border-bottom pb-4 mb-4" style="border-bottom: 1px solid #e9ecef !important; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                        <h5 class="text-dark mb-3" style="color: #212529; margin-bottom: 1rem;">
+                            <i class="material-symbols-outlined me-2 fs-16 text-primary" style="margin-right: 0.5rem; font-size: 16px; color: #007bff;">local_shipping</i>
+                            Delivery Details
+                        </h5>
+                        <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                            <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                                <div class="mb-3" style="margin-bottom: 1rem;">
+                                    <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Invoice Numbers</label>
+                                    <input type="text" name="invoice_numbers" class="form-control bg-white" placeholder="Enter invoice numbers" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                                <div class="mb-3" style="margin-bottom: 1rem;">
+                                    <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Delivery Location</label>
+                                    <input type="text" name="delivery_location" class="form-control bg-white" placeholder="Enter delivery location" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="officeSection" class="task-specific-section" style="display: none; transition: all 0.3s ease;">
+                    <div class="border-bottom pb-4 mb-4" style="border-bottom: 1px solid #e9ecef !important; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                        <h5 class="text-dark mb-3" style="color: #212529; margin-bottom: 1rem;">
+                            <i class="material-symbols-outlined me-2 fs-16 text-primary" style="margin-right: 0.5rem; font-size: 16px; color: #007bff;">business_center</i>
+                            Office Task Details
+                        </h5>
+                        <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                            <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                                <div class="mb-3" style="margin-bottom: 1rem;">
+                                    <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Office Task Type</label>
+                                    <select name="office_task_type" class="form-select bg-white" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="%23212529" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;">
+                                        {% for type in office_task_choices %}
+                                        <option value="{{ type.0 }}">{{ type.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                                <div class="mb-3" style="margin-bottom: 1rem;">
+                                    <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Specific Date</label>
+                                    <input type="date" name="specific_date" class="form-control bg-white" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                                </div>
+                            </div>
+                            <div class="col-12" style="flex: 0 0 100%; max-width: 100%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                                <div class="mb-3" style="margin-bottom: 1rem;">
+                                    <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Employee Profiles to Review</label>
+                                    <textarea name="employee_profiles_to_review" class="form-control bg-white" rows="2" placeholder="Enter employee IDs or names" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; resize: vertical; min-height: 80px;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="serviceSection" class="task-specific-section" style="display: none; transition: all 0.3s ease;">
+                    <div class="border-bottom pb-4 mb-4" style="border-bottom: 1px solid #e9ecef !important; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                        <h5 class="text-dark mb-3" style="color: #212529; margin-bottom: 1rem;">
+                            <i class="material-symbols-outlined me-2 fs-16 text-primary" style="margin-right: 0.5rem; font-size: 16px; color: #007bff;">build</i>
+                            Service Details
+                        </h5>
+                        <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                            <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                                <div class="mb-3" style="margin-bottom: 1rem;">
+                                    <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Service Type</label>
+                                    <select name="service_type" class="form-select bg-white" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="%23212529" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;">
+                                        {% for type in service_type_choices %}
+                                        <option value="{{ type.0 }}">{{ type.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                                <div class="mb-3" style="margin-bottom: 1rem;">
+                                    <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">VIN Number</label>
+                                    <input type="text" name="vin_number" class="form-control bg-white" placeholder="Enter VIN number" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                                <div class="mb-3" style="margin-bottom: 1rem;">
+                                    <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Work Location</label>
+                                    <input type="text" name="work_location" class="form-control bg-white" placeholder="Enter work location" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                                <div class="mb-3" style="margin-bottom: 1rem;">
+                                    <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Shared Staff Details</label>
+                                    <input type="text" name="shared_staff_details" class="form-control bg-white" placeholder="Enter staff details" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="border-bottom pb-4 mb-4" style="border-bottom: 1px solid #e9ecef !important; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                    <h5 class="text-dark mb-3" style="color: #212529; margin-bottom: 1rem;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary" style="margin-right: 0.5rem; font-size: 16px; color: #007bff;">description</i>
+                        Additional Information
+                    </h5>
+                    <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                        <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Customer Name</label>
+                                <input type="text" name="customer_name" class="form-control bg-white" placeholder="Enter customer name" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Location</label>
+                                <input type="text" name="location" class="form-control bg-white" placeholder="Enter task location" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" style="margin-bottom: 1rem;">
+                        <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Address</label>
+                        <textarea name="address" class="form-control bg-white" rows="2" placeholder="Enter full address" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; resize: vertical; min-height: 80px;"></textarea>
+                    </div>
+
+                    <div class="mb-3" style="margin-bottom: 1rem;">
+                        <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Task Notes</label>
+                        <textarea name="task_notes" class="form-control bg-white" rows="3" placeholder="Enter any additional notes" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; resize: vertical; min-height: 120px;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Vehicle Information -->
+                <div class="border-bottom pb-4 mb-4" style="border-bottom: 1px solid #e9ecef !important; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                    <h5 class="text-dark mb-3" style="color: #212529; margin-bottom: 1rem;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary" style="margin-right: 0.5rem; font-size: 16px; color: #007bff;">directions_car</i>
+                        Vehicle Information
+                    </h5>
+                    <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                        <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Vehicle Details</label>
+                                <textarea name="vehicle_details" class="form-control bg-white" rows="2" placeholder="Enter vehicle details" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px; resize: vertical; min-height: 80px;"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Vehicle Model</label>
+                                <input type="text" name="vehicle_model" class="form-control bg-white" placeholder="Enter vehicle model" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                        <div class="col-md-4" style="flex: 0 0 33.333333%; max-width: 33.333333%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Vehicle Year</label>
+                                <input type="number" name="vehicle_year" class="form-control bg-white" placeholder="e.g., 2023" min="1900" max="{% now 'Y' %}" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                        <div class="col-md-4" style="flex: 0 0 33.333333%; max-width: 33.333333%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Vehicle Color</label>
+                                <input type="text" name="vehicle_color" class="form-control bg-white" placeholder="Enter vehicle color" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                        <div class="col-md-4" style="flex: 0 0 33.333333%; max-width: 33.333333%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Progress (%)</label>
+                                <input type="number" name="percentage_completed" class="form-control bg-white" value="0" min="0" max="100" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                        <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Vehicle Image (Before)</label>
+                                <div class="file-upload-container" style="margin-top: 8px;">
+                                    <div class="file-upload-area bg-white" style="border: 2px dashed #dee2e6; border-radius: 8px; padding: 40px 20px; text-align: center; transition: all 0.3s ease; background-color: #ffffff; position: relative; min-height: 200px; display: flex; flex-direction: column; justify-content: center;">
+                                        <div class="file-upload-content" style="transition: opacity 0.3s ease;">
+                                            <i class="material-symbols-outlined file-upload-icon" style="font-size: 48px; color: #6c757d; margin-bottom: 16px;">cloud_upload</i>
+                                            <h5 class="file-upload-title" style="font-size: 18px; font-weight: 500; color: #212529; margin-bottom: 8px;">Drag and drop an image or Browse</h5>
+                                            <p class="file-upload-subtitle" style="font-size: 14px; color: #6c757d; margin-bottom: 0;">JPG, PNG or GIF - Max 5MB</p>
+                                            <input type="file" class="file-upload-input" name="vehicle_image_before" accept="image/*" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer;">
+                                        </div>
+                                        <div class="file-preview" style="margin-top: 16px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Vehicle Image (After)</label>
+                                <div class="file-upload-container" style="margin-top: 8px;">
+                                    <div class="file-upload-area bg-white" style="border: 2px dashed #dee2e6; border-radius: 8px; padding: 40px 20px; text-align: center; transition: all 0.3s ease; background-color: #ffffff; position: relative; min-height: 200px; display: flex; flex-direction: column; justify-content: center;">
+                                        <div class="file-upload-content" style="transition: opacity 0.3s ease;">
+                                            <i class="material-symbols-outlined file-upload-icon" style="font-size: 48px; color: #6c757d; margin-bottom: 16px;">cloud_upload</i>
+                                            <h5 class="file-upload-title" style="font-size: 18px; font-weight: 500; color: #212529; margin-bottom: 8px;">Drag and drop an image or Browse</h5>
+                                            <p class="file-upload-subtitle" style="font-size: 14px; color: #6c757d; margin-bottom: 0;">JPG, PNG or GIF - Max 5MB</p>
+                                            <input type="file" class="file-upload-input" name="vehicle_image_after" accept="image/*" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer;">
+                                        </div>
+                                        <div class="file-preview" style="margin-top: 16px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Information -->
+                <div class="border-bottom pb-4 mb-4" style="border-bottom: 1px solid #e9ecef !important; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                    <h5 class="text-dark mb-3" style="color: #212529; margin-bottom: 1rem;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary" style="margin-right: 0.5rem; font-size: 16px; color: #007bff;">schedule</i>
+                        Timeline
+                    </h5>
+                    <div class="row" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+                        <div class="col-md-3" style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Assign Time</label>
+                                <input type="datetime-local" name="task_assign_time" class="form-control bg-white" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                        <div class="col-md-3" style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Start Time</label>
+                                <input type="datetime-local" name="task_start_time" class="form-control bg-white" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                        <div class="col-md-3" style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Completed Date</label>
+                                <input type="datetime-local" name="task_completed_date" class="form-control bg-white" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                        <div class="col-md-3" style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                            <div class="mb-3" style="margin-bottom: 1rem;">
+                                <label class="form-label text-dark fw-medium" style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Due Date</label>
+                                <input type="datetime-local" name="due_date" class="form-control bg-white" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="mt-4 pt-3 border-top" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e9ecef !important;">
+                    <div class="row g-2" style="display: flex; flex-wrap: wrap; margin-right: -0.5rem; margin-left: -0.5rem;">
+                        <div class="col-md-4" style="flex: 0 0 33.333333%; max-width: 33.333333%; padding-right: 0.5rem; padding-left: 0.5rem;">
+                            <button type="button" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 py-3" onclick="window.history.back()" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: white; border: 1px solid #6c757d; color: #6c757d; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; width: 100%; cursor: pointer; transition: all 0.2s ease;">
+                                <i class="material-symbols-outlined fs-16" style="font-size: 16px;">arrow_back</i>
+                                Cancel
+                            </button>
+                        </div>
+                        <div class="col-md-4" style="flex: 0 0 33.333333%; max-width: 33.333333%; padding-right: 0.5rem; padding-left: 0.5rem;">
+                            <button type="reset" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-3" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: white; border: 1px solid #dc3545; color: #dc3545; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; width: 100%; cursor: pointer; transition: all 0.2s ease;">
+                                <i class="material-symbols-outlined fs-16" style="font-size: 16px;">refresh</i>
+                                Reset Form
+                            </button>
+                        </div>
+                        <div class="col-md-4" style="flex: 0 0 33.333333%; max-width: 33.333333%; padding-right: 0.5rem; padding-left: 0.5rem;">
+                            <button type="submit" class="btn btn-primary text-white w-100 d-flex align-items-center justify-content-center gap-2 py-3" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #007bff; border: 1px solid #007bff; color: white; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; width: 100%; cursor: pointer; transition: all 0.2s ease;">
+                                <i class="material-symbols-outlined fs-16 text-white" style="font-size: 16px; color: white;">add_task</i>
+                                Create Task
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const taskTypeSelect = document.getElementById('taskType');
+    const deliverySection = document.getElementById('deliverySection');
+    const officeSection = document.getElementById('officeSection');
+    const serviceSection = document.getElementById('serviceSection');
+    
+    function toggleTaskSections() {
+        // Hide all sections first
+        deliverySection.style.display = 'none';
+        officeSection.style.display = 'none';
+        serviceSection.style.display = 'none';
+        
+        // Show relevant section based on selected task type
+        const selectedType = taskTypeSelect.value;
+        if (selectedType === 'delivery') {
+            deliverySection.style.display = 'block';
+        } else if (selectedType === 'office') {
+            officeSection.style.display = 'block';
+        } else if (selectedType === 'service') {
+            serviceSection.style.display = 'block';
+        }
+    }
+    
+    // Initial toggle
+    toggleTaskSections();
+    
+    // Add event listener for changes
+    taskTypeSelect.addEventListener('change', toggleTaskSections);
+    
+    // Set current datetime for assign time by default
+    const now = new Date();
+    const localDateTime = now.toISOString().slice(0, 16);
+    const assignTimeInput = document.querySelector('input[name="task_assign_time"]');
+    if (assignTimeInput && !assignTimeInput.value) {
+        assignTimeInput.value = localDateTime;
+    }
+    
+    // Initialize file upload functionality
+    function initializeFileUpload(uploadArea) {
+        const fileInput = uploadArea.querySelector('.file-upload-input');
+        const preview = uploadArea.querySelector('.file-preview');
+        const uploadContent = uploadArea.querySelector('.file-upload-content');
+        
+        // File input change
+        fileInput.addEventListener('change', function() {
+            handleFileSelection(this, preview, uploadContent);
+        });
+        
+        // Drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            uploadArea.classList.add('file-upload-highlight');
+            uploadArea.style.borderColor = '#007bff';
+            uploadArea.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+        }
+        
+        function unhighlight() {
+            uploadArea.classList.remove('file-upload-highlight');
+            uploadArea.style.borderColor = '#dee2e6';
+            uploadArea.style.backgroundColor = '#ffffff';
+        }
+        
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            handleFileSelection(fileInput, preview, uploadContent);
+        }
+    }
+    
+    function handleFileSelection(fileInput, preview, uploadContent) {
+        const file = fileInput.files[0];
+        if (file) {
+            // Check file size
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert(`File is too large. Maximum size is ${maxSize / (1024 * 1024)}MB.`);
+                fileInput.value = '';
+                return;
+            }
+            
+            // Create preview
+            preview.innerHTML = '';
+            
+            const previewItem = document.createElement('div');
+            previewItem.style.display = 'flex';
+            previewItem.style.alignItems = 'center';
+            previewItem.style.background = 'white';
+            previewItem.style.border = '1px solid #e9ecef';
+            previewItem.style.borderRadius = '6px';
+            previewItem.style.padding = '12px';
+            previewItem.style.marginBottom = '8px';
+            previewItem.style.position = 'relative';
+            
+            const fileIcon = document.createElement('i');
+            fileIcon.className = 'material-symbols-outlined';
+            fileIcon.style.fontSize = '24px';
+            fileIcon.style.color = '#6c757d';
+            fileIcon.style.marginRight = '12px';
+            
+            // Set icon based on file type
+            if (file.type.startsWith('image/')) {
+                fileIcon.textContent = 'image';
+                // For images, create image preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgPreview = document.createElement('div');
+                    imgPreview.style.marginRight = '12px';
+                    imgPreview.innerHTML = `
+                        <img src="${e.target.result}" alt="${file.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #e9ecef;">
+                    `;
+                    previewItem.insertBefore(imgPreview, previewItem.firstChild);
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type === 'application/pdf') {
+                fileIcon.textContent = 'picture_as_pdf';
+            } else {
+                fileIcon.textContent = 'description';
+            }
+            
+            const fileInfo = document.createElement('div');
+            fileInfo.style.flexGrow = '1';
+            
+            const fileName = document.createElement('div');
+            fileName.style.fontWeight = '500';
+            fileName.style.color = '#212529';
+            fileName.style.fontSize = '14px';
+            fileName.style.marginBottom = '4px';
+            fileName.style.wordBreak = 'break-word';
+            fileName.textContent = file.name;
+            
+            const fileSize = document.createElement('div');
+            fileSize.style.fontSize = '12px';
+            fileSize.style.color = '#6c757d';
+            fileSize.textContent = formatFileSize(file.size);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.style.background = 'none';
+            removeBtn.style.border = 'none';
+            removeBtn.style.color = '#6c757d';
+            removeBtn.style.cursor = 'pointer';
+            removeBtn.style.padding = '6px';
+            removeBtn.style.borderRadius = '4px';
+            removeBtn.style.display = 'flex';
+            removeBtn.style.alignItems = 'center';
+            removeBtn.style.justifyContent = 'center';
+            removeBtn.style.minHeight = 'auto';
+            removeBtn.style.transition = 'all 0.2s ease';
+            removeBtn.innerHTML = '<i class="material-symbols-outlined">close</i>';
+            removeBtn.title = 'Remove file';
+            
+            removeBtn.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = '#f8f9fa';
+                this.style.color = '#dc3545';
+                this.style.transform = 'scale(1.1)';
+            });
+            
+            removeBtn.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = 'transparent';
+                this.style.color = '#6c757d';
+                this.style.transform = 'scale(1)';
+            });
+            
+            removeBtn.addEventListener('click', function() {
+                fileInput.value = '';
+                preview.innerHTML = '';
+                uploadContent.style.display = 'block';
+            });
+            
+            fileInfo.appendChild(fileName);
+            fileInfo.appendChild(fileSize);
+            
+            previewItem.appendChild(fileIcon);
+            previewItem.appendChild(fileInfo);
+            previewItem.appendChild(removeBtn);
+            
+            preview.appendChild(previewItem);
+            
+            // Hide the upload content
+            uploadContent.style.display = 'none';
+        }
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Initialize file upload for vehicle images
+    document.querySelectorAll('.file-upload-area').forEach(area => {
+        initializeFileUpload(area);
+    });
+    
+    // Add form validation
+    const taskForm = document.getElementById('taskForm');
+    taskForm.addEventListener('submit', function(e) {
+        const employeeSelect = document.querySelector('select[name="employee"]');
+        const taskTypeSelect = document.querySelector('select[name="task_type"]');
+        const headingInput = document.querySelector('input[name="heading"]');
+        
+        let isValid = true;
+        let errorMessage = '';
+        
+        if (!employeeSelect.value) {
+            isValid = false;
+            errorMessage += 'Please select an employee.\n';
+        }
+        
+        if (!taskTypeSelect.value) {
+            isValid = false;
+            errorMessage += 'Please select a task type.\n';
+        }
+        
+        if (!headingInput.value.trim()) {
+            isValid = false;
+            errorMessage += 'Please enter a task heading.\n';
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fix the following errors:\n\n' + errorMessage);
+        }
+    });
+});
+</script>
+{% endblock %}

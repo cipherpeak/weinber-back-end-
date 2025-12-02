@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 mt-1">
+        <h3 class="mb-0 text-dark" style="font-weight: 600; font-size: 1.75rem;">All Tasks</h3>
+        <div class="d-flex gap-2">
+            <a href="{% url 'create-dashboard-task' %}" class="btn btn-primary d-flex align-items-center gap-2" style="border-radius: 8px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: #007bff; border-color: #007bff; color: white !important; text-decoration: none;">
+                <i class="material-symbols-outlined fs-16 text-white">add</i>
+                Create Task
+            </a>
+            <a href="{% url 'task-dashboard' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="border-radius: 8px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d; text-decoration: none;">
+                <i class="material-symbols-outlined fs-16">dashboard</i>
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+        <div class="card-body" style="background-color: white !important; padding: 1.5rem;">
+            <form method="GET" action="" class="row g-3 align-items-end">
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Date</label>
+                    <input type="date" name="date" class="form-control bg-white" value="{{ current_date }}" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Employee</label>
+                    <select name="employee" class="form-select bg-white" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                        <option value="">All Employees</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.employeeId }}" {% if current_employee == emp.employeeId %}selected{% endif %}>
+                            {{ emp.employeeId }} - {{ emp.employee_name|default:"N/A" }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Status</label>
+                    <select name="status" class="form-select bg-white" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                        <option value="">All Status</option>
+                        {% for status in status_choices %}
+                        <option value="{{ status.0 }}" {% if current_status == status.0 %}selected{% endif %}>
+                            {{ status.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Task Type</label>
+                    <select name="task_type" class="form-select bg-white" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                        <option value="">All Types</option>
+                        {% for type in task_type_choices %}
+                        <option value="{{ type.0 }}" {% if current_task_type == type.0 %}selected{% endif %}>
+                            {{ type.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Priority</label>
+                    <select name="priority" class="form-select bg-white" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                        <option value="">All Priorities</option>
+                        {% for priority in priority_choices %}
+                        <option value="{{ priority.0 }}" {% if current_priority == priority.0 %}selected{% endif %}>
+                            {{ priority.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <div class="d-flex gap-2 h-100">
+                        <button type="submit" class="btn btn-primary text-white w-100 d-flex align-items-center justify-content-center gap-2 py-3" style="border-radius: 8px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 12px 24px; font-size: 14px; min-height: 48px; display: flex; align-items: center; justify-content: center; background-color: #007bff; border-color: #007bff; color: white !important;">
+                            <i class="material-symbols-outlined fs-16 text-white">filter_alt</i>
+                            Apply
+                        </button>
+                        <a href="{% url 'task-list' %}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 py-3" style="border-radius: 8px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 12px 24px; font-size: 14px; min-height: 48px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d; text-decoration: none;">
+                            <i class="material-symbols-outlined fs-16">refresh</i>
+                            Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tasks Table -->
+    <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+        <div class="card-body p-0" style="background-color: white !important;">
+            <div class="table-responsive">
+                <table class="table align-middle w-100">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px; color: #212529;">Task Details</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px; color: #212529;">Employee</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px; color: #212529;">Type</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px; color: #212529;">Status</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px; color: #212529;">Priority</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px; color: #212529;">Due Date</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px; color: #212529;">Progress</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px; color: #212529;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(13, 110, 253, 0.1); display: flex; align-items: center; justify-content: center;">
+                                            <i class="material-symbols-outlined text-primary fs-16" style="font-size: 1rem; color: #0d6efd;">
+                                                {% if task.task_type == 'delivery' %}local_shipping
+                                                {% elif task.task_type == 'office' %}business_center
+                                                {% elif task.task_type == 'service' %}build
+                                                {% else %}task{% endif %}
+                                            </i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-0 fw-medium text-dark" style="font-weight: 500; color: #212529; margin-bottom: 2px;">{{ task.heading }}</h6>
+                                        <small class="text-muted" style="color: #6c757d; font-size: 0.875rem;">{{ task.description|truncatewords:8 }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <div class="d-flex align-items-center">
+                                    {% if task.employee.profile_pic %}
+                                        <img src="{{ task.employee.profile_pic.url }}" class="rounded-circle me-2" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" alt="{{ task.employee.employee_name }}">
+                                    {% else %}
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; border-radius: 50%; background-color: #6c757d; display: flex; align-items: center; justify-content: center;">
+                                            <span class="text-white fw-bold small" style="color: white; font-weight: 600; font-size: 0.875rem;">{{ task.employee.employee_name|default:task.employee.employeeId|first|upper }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-medium text-dark small" style="font-weight: 500; color: #212529; font-size: 0.875rem;">{{ task.employee.employee_name|default:"Not Set" }}</div>
+                                        <small class="text-muted" style="color: #6c757d; font-size: 0.75rem;">{{ task.employee.employeeId }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-1" style="background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; border: 1px solid rgba(13, 202, 240, 0.25); border-radius: 50px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 500;">
+                                    {{ task.get_task_type_display }}
+                                </span>
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}warning{% elif task.status == 'not_started' %}secondary{% else %}info{% endif %} bg-opacity-10 text-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}warning{% elif task.status == 'not_started' %}secondary{% else %}info{% endif %} border border-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}warning{% elif task.status == 'not_started' %}secondary{% else %}info{% endif %} border-opacity-25 rounded-pill px-3 py-1" style="background-color: {% if task.status == 'completed' %}rgba(25, 135, 84, 0.1){% elif task.status == 'in_progress' %}rgba(255, 193, 7, 0.1){% elif task.status == 'not_started' %}rgba(108, 117, 125, 0.1){% else %}rgba(13, 202, 240, 0.1){% endif %}; color: {% if task.status == 'completed' %}#198754{% elif task.status == 'in_progress' %}#ffc107{% elif task.status == 'not_started' %}#6c757d{% else %}#0dcaf0{% endif %}; border: 1px solid {% if task.status == 'completed' %}rgba(25, 135, 84, 0.25){% elif task.status == 'in_progress' %}rgba(255, 193, 7, 0.25){% elif task.status == 'not_started' %}rgba(108, 117, 125, 0.25){% else %}rgba(13, 202, 240, 0.25){% endif %}; border-radius: 50px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 500;">
+                                    {{ task.get_status_display }}
+                                </span>
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %} bg-opacity-10 text-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %} border border-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %} border-opacity-25 rounded-pill px-3 py-1" style="background-color: {% if task.priority == 'urgent' %}rgba(220, 53, 69, 0.1){% elif task.priority == 'high' %}rgba(255, 193, 7, 0.1){% elif task.priority == 'medium' %}rgba(13, 202, 240, 0.1){% else %}rgba(108, 117, 125, 0.1){% endif %}; color: {% if task.priority == 'urgent' %}#dc3545{% elif task.priority == 'high' %}#ffc107{% elif task.priority == 'medium' %}#0dcaf0{% else %}#6c757d{% endif %}; border: 1px solid {% if task.priority == 'urgent' %}rgba(220, 53, 69, 0.25){% elif task.priority == 'high' %}rgba(255, 193, 7, 0.25){% elif task.priority == 'medium' %}rgba(13, 202, 240, 0.25){% else %}rgba(108, 117, 125, 0.25){% endif %}; border-radius: 50px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 500;">
+                                    {{ task.get_priority_display }}
+                                </span>
+                            </td>
+                            <td class="text-dark" style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px; color: #212529;">
+                                {% if task.due_date %}
+                                    {{ task.due_date|date:"M d, Y" }}
+                                    <br>
+                                    <small class="text-muted" style="color: #6c757d; font-size: 0.75rem;">{{ task.due_date|date:"h:i A" }}</small>
+                                {% else %}
+                                    <span class="text-muted" style="color: #6c757d;">Not set</span>
+                                {% endif %}
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1" style="height: 6px; background-color: #e9ecef; border-radius: 10px; overflow: hidden;">
+                                        <div class="progress-bar bg-{% if task.percentage_completed == 100 %}success{% else %}primary{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ task.percentage_completed }}%; border-radius: 10px; background-color: {% if task.percentage_completed == 100 %}#198754{% else %}#0d6efd{% endif %};"
+                                             aria-valuenow="{{ task.percentage_completed }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted ms-2" style="color: #6c757d; font-size: 0.75rem; min-width: 35px;">{{ task.percentage_completed }}%</small>
+                                </div>
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <div class="d-flex justify-content-end" style="gap: 8px;">
+                                    <a href="{% url 'task-dashboard-detail' task.id %}" 
+                                       class="btn btn-outline-primary d-flex align-items-center justify-content-center gap-2 py-2 px-3" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="top" 
+                                       data-bs-title="View Details"
+                                       style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #007bff; color: #007bff; text-decoration: none;">
+                                        <i class="material-symbols-outlined fs-16">visibility</i>
+                                        <span class="d-none d-sm-inline">View</span>
+                                    </a>
+                                    <a href="#" 
+                                       class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 py-2 px-3" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="top" 
+                                       data-bs-title="Edit Task"
+                                       style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d; text-decoration: none;">
+                                        <i class="material-symbols-outlined fs-16">edit</i>
+                                        <span class="d-none d-sm-inline">Edit</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4" style="vertical-align: middle; padding: 3rem 1rem; text-align: center;">
+                                <div class="text-muted" style="color: #6c757d;">
+                                    <i class="material-symbols-outlined fs-48 text-dark" style="font-size: 3rem; color: #212529;">task</i>
+                                    <p class="mt-2 mb-0 text-dark" style="margin-top: 1rem; margin-bottom: 0.5rem; color: #212529; font-size: 1.1rem;">No tasks found.</p>
+                                    <p class="mb-0" style="margin-bottom: 0; color: #6c757d;">Try adjusting your filters or create a new task.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="d-flex justify-content-center justify-content-sm-between align-items-center text-center flex-wrap gap-2 showing-wrap pt-15 p-20" style="display: flex; justify-content: center; align-items: center; text-align: center; flex-wrap: wrap; gap: 0.5rem; padding: 1.5rem; padding-top: 1rem;">
+                <span class="fs-15 text-dark" style="font-size: 0.9375rem; color: #212529;">
+                    Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} tasks
+                </span>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination mb-0" style="margin-bottom: 0;">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous" style="border-radius: 6px; border: 1px solid #dee2e6; color: #007bff; padding: 0.375rem 0.75rem; text-decoration: none; margin: 0 2px; transition: all 0.2s ease;">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#" style="border-radius: 6px; border: 1px solid #007bff; background-color: #007bff; color: white; padding: 0.375rem 0.75rem; text-decoration: none; margin: 0 2px;">{{ num }}</a></li>
+                        {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" style="border-radius: 6px; border: 1px solid #dee2e6; color: #007bff; padding: 0.375rem 0.75rem; text-decoration: none; margin: 0 2px; transition: all 0.2s ease;">{{ num }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next" style="border-radius: 6px; border: 1px solid #dee2e6; color: #007bff; padding: 0.375rem 0.75rem; text-decoration: none; margin: 0 2px; transition: all 0.2s ease;">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Only hover effects and media queries remain in style tag */
+.form-control:focus, .form-select:focus {
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.1) !important;
+    background-color: #ffffff !important;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3 !important;
+    border-color: #0056b3 !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.2) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+.page-link:hover {
+    background-color: #f8f9fa !important;
+    border-color: #007bff !important;
+    color: #0056b3 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Card hover effect */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Progress bar animation */
+.progress-bar {
+    transition: width 0.3s ease !important;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .btn {
+        padding: 8px 16px !important;
+        font-size: 13px !important;
+        min-height: 40px !important;
+    }
+    
+    .table th, .table td {
+        padding: 12px 8px !important;
+        font-size: 0.875rem !important;
+    }
+    
+    .d-flex.gap-2 {
+        gap: 8px !important;
+    }
+    
+    h3 {
+        font-size: 1.5rem !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+});
+</script>
+{% endblock %}

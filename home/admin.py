@@ -7,4 +7,5 @@ from .models import *
 admin.site.register(AttendanceCheck)
 admin.site.register(BreakTimer)
 admin.site.register(BreakHistory)
+admin.site.register(Leave)
 admin.site.register(CompanyAnnouncement)

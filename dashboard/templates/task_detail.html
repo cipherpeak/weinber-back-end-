@@ -1,0 +1,479 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 mt-1">
+        <div>
+            <h3 class="mb-0 text-dark" style="font-weight: 600; font-size: 1.75rem;">Task Details</h3>
+            <p class="text-muted mb-0 mt-1" style="font-size: 0.95rem;">{{ task.heading }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'task-list' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="border-radius: 8px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d; text-decoration: none;">
+                <i class="material-symbols-outlined fs-16">arrow_back</i>
+                Back to Tasks
+            </a>
+            <a href="#" class="btn btn-primary d-flex align-items-center gap-2" style="border-radius: 8px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: #007bff; border-color: #007bff; color: white !important; text-decoration: none;">
+                <i class="material-symbols-outlined fs-16 text-white">edit</i>
+                Edit Task
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Task Information -->
+        <div class="col-lg-8">
+            <!-- Task Overview Card -->
+            <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+                <div class="card-header bg-white border-0" style="background-color: white !important; padding: 1.5rem 1.5rem 0.75rem;">
+                    <h5 class="card-title mb-0 text-dark" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary">info</i>
+                        Task Overview
+                    </h5>
+                </div>
+                <div class="card-body" style="background-color: white !important; padding: 1.5rem;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Task Type</label>
+                                <p class="mb-0">
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-2" style="font-weight: 500; font-size: 0.875rem; padding: 0.5rem 1rem; border-radius: 50px;">
+                                        {{ task.get_task_type_display }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Status</label>
+                                <p class="mb-0">
+                                    <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}warning{% elif task.status == 'not_started' %}secondary{% else %}info{% endif %} bg-opacity-10 text-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}warning{% elif task.status == 'not_started' %}secondary{% else %}info{% endif %} border border-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}warning{% elif task.status == 'not_started' %}secondary{% else %}info{% endif %} border-opacity-25 rounded-pill px-3 py-2" style="font-weight: 500; font-size: 0.875rem; padding: 0.5rem 1rem; border-radius: 50px;">
+                                        {{ task.get_status_display }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Priority</label>
+                                <p class="mb-0">
+                                    <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %} bg-opacity-10 text-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %} border border-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %} border-opacity-25 rounded-pill px-3 py-2" style="font-weight: 500; font-size: 0.875rem; padding: 0.5rem 1rem; border-radius: 50px;">
+                                        {{ task.get_priority_display }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Progress</label>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1" style="height: 10px; border-radius: 5px; background-color: #e9ecef; overflow: hidden;">
+                                        <div class="progress-bar bg-{% if task.percentage_completed == 100 %}success{% else %}primary{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ task.percentage_completed }}%; border-radius: 5px; transition: width 0.3s ease;"
+                                             aria-valuenow="{{ task.percentage_completed }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <span class="ms-3 fw-medium text-dark" style="font-weight: 600; font-size: 1rem; min-width: 45px;">{{ task.percentage_completed }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Description</label>
+                        <p class="mb-0 text-dark" style="color: #212529; line-height: 1.6; background-color: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #007bff;">
+                            {{ task.description|default:"No description provided" }}
+                        </p>
+                    </div>
+
+                    {% if task.customer_name %}
+                    <div class="mb-4">
+                        <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Customer</label>
+                        <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ task.customer_name }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if task.address %}
+                    <div class="mb-4">
+                        <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Address</label>
+                        <p class="mb-0 text-dark" style="color: #212529; line-height: 1.5;">{{ task.address }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if task.location %}
+                    <div class="mb-4">
+                        <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Location</label>
+                        <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ task.location }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if task.task_notes %}
+                    <div class="mb-4">
+                        <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Task Notes</label>
+                        <p class="mb-0 text-dark" style="color: #212529; line-height: 1.6; background-color: #fff3cd; padding: 1rem; border-radius: 8px; border-left: 4px solid #ffc107;">
+                            {{ task.task_notes }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Timeline Card -->
+            <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+                <div class="card-header bg-white border-0" style="background-color: white !important; padding: 1.5rem 1.5rem 0.75rem;">
+                    <h5 class="card-title mb-0 text-dark" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary">schedule</i>
+                        Timeline
+                    </h5>
+                </div>
+                <div class="card-body" style="background-color: white !important; padding: 1.5rem;">
+                    <div style="position: relative; padding-left: 30px;">
+                        <div style="position: relative; margin-bottom: 25px; display: flex; align-items: flex-start;">
+                            <div style="position: absolute; left: -30px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background-color: {% if task.task_assign_time %}#198754{% else %}#dee2e6{% endif %}; border: 3px solid white; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+                            <div style="flex: 1; padding-top: 0;">
+                                <h6 style="margin-bottom: 5px; font-weight: 600; color: #212529; font-size: 0.95rem;">Task Assigned</h6>
+                                <p style="color: #6c757d; margin-bottom: 0; font-size: 0.875rem;">
+                                    {% if task.task_assign_time %}
+                                        {{ task.task_assign_time|date:"M d, Y h:i A" }}
+                                    {% else %}
+                                        <span style="color: #adb5bd; font-style: italic;">Not assigned yet</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div style="position: relative; margin-bottom: 25px; display: flex; align-items: flex-start;">
+                            <div style="position: absolute; left: -30px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background-color: {% if task.task_start_time %}#198754{% else %}#dee2e6{% endif %}; border: 3px solid white; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+                            <div style="flex: 1; padding-top: 0;">
+                                <h6 style="margin-bottom: 5px; font-weight: 600; color: #212529; font-size: 0.95rem;">Task Started</h6>
+                                <p style="color: #6c757d; margin-bottom: 0; font-size: 0.875rem;">
+                                    {% if task.task_start_time %}
+                                        {{ task.task_start_time|date:"M d, Y h:i A" }}
+                                    {% else %}
+                                        <span style="color: #adb5bd; font-style: italic;">Not started yet</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div style="position: relative; margin-bottom: 25px; display: flex; align-items: flex-start;">
+                            <div style="position: absolute; left: -30px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background-color: {% if task.task_completed_date %}#198754{% else %}#dee2e6{% endif %}; border: 3px solid white; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+                            <div style="flex: 1; padding-top: 0;">
+                                <h6 style="margin-bottom: 5px; font-weight: 600; color: #212529; font-size: 0.95rem;">Task Completed</h6>
+                                <p style="color: #6c757d; margin-bottom: 0; font-size: 0.875rem;">
+                                    {% if task.task_completed_date %}
+                                        {{ task.task_completed_date|date:"M d, Y h:i A" }}
+                                    {% else %}
+                                        <span style="color: #adb5bd; font-style: italic;">Not completed yet</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div style="position: relative; margin-bottom: 0; display: flex; align-items: flex-start;">
+                            <div style="position: absolute; left: -30px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background-color: {% if task.due_date %}#0d6efd{% else %}#dee2e6{% endif %}; border: 3px solid white; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+                            <div style="flex: 1; padding-top: 0;">
+                                <h6 style="margin-bottom: 5px; font-weight: 600; color: #212529; font-size: 0.95rem;">Due Date</h6>
+                                <p style="color: #6c757d; margin-bottom: 0; font-size: 0.875rem;">
+                                    {% if task.due_date %}
+                                        {{ task.due_date|date:"M d, Y h:i A" }}
+                                        {% if task.due_date < now %}
+                                            <span class="badge bg-danger ms-2" style="background-color: #dc3545; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500;">Overdue</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span style="color: #adb5bd; font-style: italic;">No due date set</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div style="position: absolute; left: -23px; top: 0; bottom: 0; width: 2px; background-color: #e9ecef; z-index: 1;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Specific Details Cards -->
+            {% if task.task_type == 'delivery' and task.delivery_details %}
+            <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+                <div class="card-header bg-white border-0" style="background-color: white !important; padding: 1.5rem 1.5rem 0.75rem;">
+                    <h5 class="card-title mb-0 text-dark" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary">local_shipping</i>
+                        Delivery Details
+                    </h5>
+                </div>
+                <div class="card-body" style="background-color: white !important; padding: 1.5rem;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Invoice Numbers</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ task.delivery_details.invoice_numbers }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Delivery Location</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ task.delivery_details.delivery_location }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if task.task_type == 'office' and task.office_details %}
+            <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+                <div class="card-header bg-white border-0" style="background-color: white !important; padding: 1.5rem 1.5rem 0.75rem;">
+                    <h5 class="card-title mb-0 text-dark" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary">business_center</i>
+                        Office Task Details
+                    </h5>
+                </div>
+                <div class="card-body" style="background-color: white !important; padding: 1.5rem;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Task Type</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ task.office_details.get_office_task_type_display }}</p>
+                            </div>
+                        </div>
+                        {% if task.office_details.specific_date %}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Specific Date</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ task.office_details.specific_date }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if task.office_details.employee_profiles_to_review %}
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Employees to Review</label>
+                                <p class="mb-0 text-dark" style="color: #212529; line-height: 1.6; background-color: #f8f9fa; padding: 1rem; border-radius: 8px;">{{ task.office_details.employee_profiles_to_review }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if task.task_type == 'service' and task.service_tasks.all %}
+            <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+                <div class="card-header bg-white border-0" style="background-color: white !important; padding: 1.5rem 1.5rem 0.75rem;">
+                    <h5 class="card-title mb-0 text-dark" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary">build</i>
+                        Service Details
+                    </h5>
+                </div>
+                <div class="card-body" style="background-color: white !important; padding: 1.5rem;">
+                    {% for service in task.service_tasks.all %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Service Type</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ service.get_service_type_display }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">VIN Number</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ service.vin_number }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Work Location</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ service.work_location }}</p>
+                            </div>
+                        </div>
+                        {% if service.shared_staff_details %}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Shared Staff</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ service.shared_staff_details }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Employee Card -->
+            <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+                <div class="card-header bg-white border-0" style="background-color: white !important; padding: 1.5rem 1.5rem 0.75rem;">
+                    <h5 class="card-title mb-0 text-dark" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary">person</i>
+                        Assigned Employee
+                    </h5>
+                </div>
+                <div class="card-body" style="background-color: white !important; padding: 1.5rem;">
+                    <div class="text-center">
+                        {% if task.employee.profile_pic %}
+                            <img src="{{ task.employee.profile_pic.url }}" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 4px solid #f8f9fa; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="{{ task.employee.employee_name }}">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 4px solid #f8f9fa; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                <span class="text-white fw-bold fs-24" style="font-size: 2rem; font-weight: 700;">{{ task.employee.employee_name|default:task.employee.employeeId|first|upper }}</span>
+                            </div>
+                        {% endif %}
+                        <h5 class="text-dark mb-1" style="font-weight: 600; font-size: 1.25rem;">{{ task.employee.employee_name|default:"Not Set" }}</h5>
+                        <p class="text-muted mb-2" style="color: #6c757d; font-size: 0.9rem;">{{ task.employee.employeeId }}</p>
+                        <p class="text-muted mb-0" style="color: #6c757d; font-size: 0.9rem;">{{ task.employee.designation|default:"No designation" }}</p>
+                        <p class="text-muted mb-3" style="color: #6c757d; font-size: 0.9rem;">{{ task.employee.department|default:"No department" }}</p>
+                        <a href="{% url 'employee-details' task.employee.id %}" class="btn btn-outline-primary btn-sm" style="border-radius: 6px; font-weight: 500; border: 1px solid #007bff; color: #007bff; padding: 0.5rem 1rem; font-size: 0.875rem; transition: all 0.2s ease; text-decoration: none;">
+                            View Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Details Card -->
+            {% if task.vehicle_details or task.vehicle_model or task.vehicle_year or task.vehicle_color %}
+            <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+                <div class="card-header bg-white border-0" style="background-color: white !important; padding: 1.5rem 1.5rem 0.75rem;">
+                    <h5 class="card-title mb-0 text-dark" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary">directions_car</i>
+                        Vehicle Details
+                    </h5>
+                </div>
+                <div class="card-body" style="background-color: white !important; padding: 1.5rem;">
+                    {% if task.vehicle_details %}
+                    <div class="mb-4">
+                        <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Details</label>
+                        <p class="mb-0 text-dark" style="color: #212529; line-height: 1.5;">{{ task.vehicle_details }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="row">
+                        {% if task.vehicle_model %}
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Model</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ task.vehicle_model }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if task.vehicle_year %}
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Year</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ task.vehicle_year }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if task.vehicle_color %}
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Color</label>
+                                <p class="mb-0 text-dark" style="color: #212529; font-weight: 500;">{{ task.vehicle_color }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Vehicle Images -->
+                    <div class="row mt-4">
+                        {% if task.vehicle_image_before %}
+                        <div class="col-6">
+                            <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Before</label>
+                            <img src="{{ task.vehicle_image_before.url }}" class="img-fluid rounded" style="border-radius: 8px; border: 1px solid #dee2e6;" alt="Vehicle Before">
+                        </div>
+                        {% endif %}
+                        {% if task.vehicle_image_after %}
+                        <div class="col-6">
+                            <label class="form-label text-dark fw-medium" style="color: #495057; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">After</label>
+                            <img src="{{ task.vehicle_image_after.url }}" class="img-fluid rounded" style="border-radius: 8px; border: 1px solid #dee2e6;" alt="Vehicle After">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Progress Images -->
+            {% if task.progress_images.all %}
+            <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: white !important; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;">
+                <div class="card-header bg-white border-0" style="background-color: white !important; padding: 1.5rem 1.5rem 0.75rem;">
+                    <h5 class="card-title mb-0 text-dark" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center;">
+                        <i class="material-symbols-outlined me-2 fs-16 text-primary">photo_library</i>
+                        Progress Images
+                    </h5>
+                </div>
+                <div class="card-body" style="background-color: white !important; padding: 1.5rem;">
+                    <div class="row">
+                        {% for image in task.progress_images.all %}
+                        <div class="col-6 mb-3">
+                            <img src="{{ image.image.url }}" class="img-fluid rounded" style="border-radius: 8px; border: 1px solid #dee2e6; height: 120px; width: 100%; object-fit: cover;" alt="Progress Image {{ forloop.counter }}">
+                            <small class="text-muted d-block mt-1" style="color: #6c757d; font-size: 0.75rem; text-align: center;">{{ image.created_at|date:"M d, Y" }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Hover effects that can't be inline */
+.btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.2) !important;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3 !important;
+    border-color: #0056b3 !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+/* Card hover effect */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Progress bar animation */
+.progress-bar {
+    transition: width 0.3s ease !important;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .btn {
+        padding: 8px 16px !important;
+        font-size: 13px !important;
+        min-height: 40px !important;
+    }
+    
+    h3 {
+        font-size: 1.5rem !important;
+    }
+    
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    .card-header {
+        padding: 1rem !important;
+    }
+}
+</style>
+{% endblock %}

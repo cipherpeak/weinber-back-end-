@@ -1,0 +1,645 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden">
+    <!-- Dashboard Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-1 text-dark">Dashboard</h3>
+            <p class="text-muted mb-0">Welcome back! Here's what's happening today.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
+                <i class="material-symbols-outlined fs-16">calendar_today</i>
+                {{ today }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Statistics Row -->
+    <div class="row g-4 mb-4">
+        <!-- Total Employees -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="material-symbols-outlined text-primary fs-24">groups</i>
+                        </div>
+                        <div>
+                            <span class="text-muted d-block mb-1">Total Employees</span>
+                            <h3 class="mb-0 text-dark">{{ total_employees }}</h3>
+                            <small class="text-muted">{{ active_employees }} active, {{ inactive_employees }} inactive</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Attendance -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="material-symbols-outlined text-success fs-24">check_circle</i>
+                        </div>
+                        <div>
+                            <span class="text-muted d-block mb-1">Today's Attendance</span>
+                            <h3 class="mb-0 text-dark">{{ employees_present }}/{{ active_employees }}</h3>
+                            <small class="text-muted">{{ attendance_percentage }}% present today</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Leaves -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="material-symbols-outlined text-warning fs-24">calendar_month</i>
+                        </div>
+                        <div>
+                            <span class="text-muted d-block mb-1">Pending Leaves</span>
+                            <h3 class="mb-0 text-dark">{{ pending_leaves }}</h3>
+                            <small class="text-muted">{{ active_leaves_today }} active leaves today</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Completion -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="material-symbols-outlined text-info fs-24">task_alt</i>
+                        </div>
+                        <div>
+                            <span class="text-muted d-block mb-1">Task Completion</span>
+                            <h3 class="mb-0 text-dark">{{ completed_tasks }}/{{ total_tasks }}</h3>
+                            <small class="text-muted">{{ task_completion_rate }}% completion rate</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Weekly Attendance Chart -->
+        <div class="col-lg-8">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h4 class="mb-0 text-dark">Weekly Attendance Overview</h4>
+                </div>
+                <div class="card-body">
+                    <div class="attendance-chart-container">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <span class="text-muted">This Week's Attendance Pattern</span>
+                            </div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-1">
+                                {{ today|date:"M d" }}
+                            </span>
+                        </div>
+                        <div class="attendance-bar-chart">
+                            {% for day, count in week_attendance.items %}
+                            <div class="bar-item">
+                                <div class="bar-label">{{ day }}</div>
+                                <div class="bar-container">
+                                    <div class="bar" style="height: {{ count|add:'0'|floatformat:0|add:'0' }}%"></div>
+                                </div>
+                                <div class="bar-count">{{ count }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Leave Trend -->
+        <div class="col-lg-4">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h4 class="mb-0 text-dark">Monthly Leave Trend</h4>
+                </div>
+                <div class="card-body">
+                    <div class="leave-trend-container">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <span class="text-muted">Last 6 Months</span>
+                            </div>
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1">
+                                Total: {{ approved_leaves_month }}
+                            </span>
+                        </div>
+                        <div class="leave-trend-chart">
+                            {% for item in monthly_leaves %}
+                            <div class="trend-item">
+                                <div class="trend-label">{{ item.month }}</div>
+                                <div class="trend-bar-container">
+                                    <div class="trend-bar" style="width: {{ item.count|add:'0'|floatformat:0|add:'0' }}%"></div>
+                                </div>
+                                <div class="trend-count">{{ item.count }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities Row -->
+    <div class="row g-4 mb-4">
+        <!-- Recent Leave Applications -->
+        <div class="col-lg-4">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 text-dark">Recent Leave Applications</h4>
+                        <a href="{% url 'leave-list' %}?status=pending" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_leaves %}
+                    <div class="activity-list">
+                        {% for leave in recent_leaves %}
+                        <div class="activity-item {% if not forloop.last %}border-bottom{% endif %} py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-{% if leave.status == 'pending' %}warning{% elif leave.status == 'approved' %}success{% elif leave.status == 'rejected' %}danger{% else %}secondary{% endif %} bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="material-symbols-outlined text-{% if leave.status == 'pending' %}warning{% elif leave.status == 'approved' %}success{% elif leave.status == 'rejected' %}danger{% else %}secondary{% endif %} fs-16">
+                                        {% if leave.status == 'pending' %}pending
+                                        {% elif leave.status == 'approved' %}check_circle
+                                        {% elif leave.status == 'rejected' %}cancel
+                                        {% else %}event{% endif %}
+                                    </i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 text-dark">{{ leave.employee.employee_name|default:leave.employee.employeeId }}</h6>
+                                    <p class="text-muted mb-1 small">
+                                        {{ leave.get_category_display }} - {{ leave.total_days }} day{{ leave.total_days|pluralize }}
+                                    </p>
+                                    <small class="text-muted">{{ leave.created_at|timesince }} ago</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{% if leave.status == 'pending' %}warning{% elif leave.status == 'approved' %}success{% elif leave.status == 'rejected' %}danger{% else %}secondary{% endif %} bg-opacity-10 text-{% if leave.status == 'pending' %}warning{% elif leave.status == 'approved' %}success{% elif leave.status == 'rejected' %}danger{% else %}secondary{% endif %} border border-{% if leave.status == 'pending' %}warning{% elif leave.status == 'approved' %}success{% elif leave.status == 'rejected' %}danger{% else %}secondary{% endif %} border-opacity-25 rounded-pill px-2 py-1">
+                                        {{ leave.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="material-symbols-outlined text-muted fs-48">calendar_month</i>
+                        <p class="text-muted mt-2 mb-0">No recent leave applications</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Tasks -->
+        <div class="col-lg-4">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 text-dark">Recent Tasks</h4>
+                        <a href="{% url 'task-list' %}" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_tasks %}
+                    <div class="activity-list">
+                        {% for task in recent_tasks %}
+                        <div class="activity-item {% if not forloop.last %}border-bottom{% endif %} py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}info{% elif task.status == 'not_started' %}warning{% else %}secondary{% endif %} bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="material-symbols-outlined text-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}info{% elif task.status == 'not_started' %}warning{% else %}secondary{% endif %} fs-16">
+                                        {% if task.task_type == 'delivery' %}local_shipping
+                                        {% elif task.task_type == 'office' %}work
+                                        {% elif task.task_type == 'service' %}construction
+                                        {% else %}task{% endif %}
+                                    </i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 text-dark">{{ task.heading|truncatechars:30 }}</h6>
+                                    <p class="text-muted mb-1 small">
+                                        {{ task.employee.employee_name|default:task.employee.employeeId }}
+                                    </p>
+                                    <small class="text-muted">{{ task.created_at|timesince }} ago</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %} bg-opacity-10 text-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %} border border-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %} border-opacity-25 rounded-pill px-2 py-1">
+                                        {{ task.get_priority_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="material-symbols-outlined text-muted fs-48">task_alt</i>
+                        <p class="text-muted mt-2 mb-0">No recent tasks</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Employees -->
+        <div class="col-lg-4">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 text-dark">Top Performers</h4>
+                        <a href="{% url 'employee-manage' %}" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if top_employees %}
+                    <div class="activity-list">
+                        {% for employee in top_employees %}
+                        <div class="activity-item {% if not forloop.last %}border-bottom{% endif %} py-3">
+                            <div class="d-flex align-items-center">
+                                {% if employee.profile_pic %}
+                                <img src="{{ employee.profile_pic.url }}" 
+                                     class="rounded-circle me-3" 
+                                     style="width: 40px; height: 40px; object-fit: cover;" 
+                                     alt="{{ employee.employee_name }}">
+                                {% else %}
+                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <span class="text-white fw-medium">{{ employee.employee_name|default:employee.employeeId|first|upper }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 text-dark">{{ employee.employee_name|default:employee.employeeId }}</h6>
+                                    <p class="text-muted mb-1 small">
+                                        {{ employee.get_department_display|default:"Not Set" }}
+                                    </p>
+                                    <small class="text-muted">{{ employee.task_count }} completed tasks</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-1">
+                                        #{{ forloop.counter }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="material-symbols-outlined text-muted fs-48">emoji_events</i>
+                        <p class="text-muted mt-2 mb-0">No performance data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row g-4">
+        <!-- Task Status Distribution -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-body">
+                    <h6 class="mb-3 text-dark">Task Status</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Completed</span>
+                        <span class="fw-medium text-dark">{{ completed_tasks }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">In Progress</span>
+                        <span class="fw-medium text-dark">{{ in_progress_tasks }}</span>
+                    </div>
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="text-muted">Not Started</span>
+    <span class="fw-medium text-dark">{{ not_started_tasks }}</span>
+</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Urgent</span>
+                        <span class="fw-medium text-danger">{{ urgent_tasks }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Summary -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-body">
+                    <h6 class="mb-3 text-dark">Today's Attendance</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Check-ins</span>
+                        <span class="fw-medium text-success">{{ check_in_count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Check-outs</span>
+                        <span class="fw-medium text-primary">{{ check_out_count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Breaks Taken</span>
+                        <span class="fw-medium text-warning">{{ today_breaks }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Present Today</span>
+                        <span class="fw-medium text-dark">{{ employees_present }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Summary -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-body">
+                    <h6 class="mb-3 text-dark">Leave Summary</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Pending Approval</span>
+                        <span class="fw-medium text-warning">{{ pending_leaves }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">This Month</span>
+                        <span class="fw-medium text-info">{{ approved_leaves_month }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Active Today</span>
+                        <span class="fw-medium text-primary">{{ active_leaves_today }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Month Range</span>
+                        <span class="fw-medium text-dark">{{ first_day_of_month }} - {{ last_day_of_month }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-white rounded-10 border border-white h-100">
+                <div class="card-body">
+                    <h6 class="mb-3 text-dark">Quick Actions</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'leave-list' %}?status=pending" class="btn btn-outline-warning d-flex align-items-center justify-content-start">
+                            <i class="material-symbols-outlined me-2">calendar_month</i>
+                            Review Pending Leaves
+                        </a>
+                        <a href="{% url 'task-list' %}?status=in_progress" class="btn btn-outline-info d-flex align-items-center justify-content-start">
+                            <i class="material-symbols-outlined me-2">task_alt</i>
+                            View Active Tasks
+                        </a>
+                        <a href="{% url 'daily-attendance' %}" class="btn btn-outline-success d-flex align-items-center justify-content-start">
+                            <i class="material-symbols-outlined me-2">check_circle</i>
+                            Check Today's Attendance
+                        </a>
+                        <a href="{% url 'create-employee' %}" class="btn btn-outline-primary d-flex align-items-center justify-content-start">
+                            <i class="material-symbols-outlined me-2">person_add</i>
+                            Add New Employee
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Chart Styles */
+.attendance-bar-chart {
+    display: flex;
+    align-items: flex-end;
+    height: 200px;
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+}
+
+.bar-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.bar-container {
+    flex: 1;
+    width: 30px;
+    background-color: #e9ecef;
+    border-radius: 6px 6px 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, #0d6efd, #3b82f6);
+    border-radius: 6px 6px 0 0;
+    transition: height 0.3s ease;
+}
+
+.bar-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+    margin-top: 10px;
+}
+
+/* Trend Chart */
+.leave-trend-chart {
+    padding: 20px 0;
+}
+
+.trend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.trend-label {
+    width: 40px;
+    font-size: 12px;
+    color: #6c757d;
+    text-transform: uppercase;
+}
+
+.trend-bar-container {
+    flex: 1;
+    height: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    margin: 0 10px;
+    overflow: hidden;
+}
+
+.trend-bar {
+    height: 100%;
+    background: linear-gradient(to right, #ffc107, #ffb347);
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+.trend-count {
+    width: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+    text-align: right;
+}
+
+/* Activity List */
+.activity-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    transition: background-color 0.2s ease;
+}
+
+.activity-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Custom Scrollbar */
+.activity-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.activity-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.activity-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.activity-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Badge Styles */
+.badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 8px;
+}
+
+/* Card Styles */
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Quick Action Buttons */
+.btn-outline-warning, .btn-outline-info, .btn-outline-success, .btn-outline-primary {
+    border-width: 1px;
+    padding: 10px 15px;
+    font-size: 14px;
+    text-align: left;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.btn-outline-info:hover {
+    background-color: #0dcaf0;
+    color: #fff;
+}
+
+.btn-outline-success:hover {
+    background-color: #198754;
+    color: #fff;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .attendance-bar-chart {
+        gap: 10px;
+    }
+    
+    .bar-container {
+        width: 20px;
+    }
+    
+    .bar-label {
+        font-size: 10px;
+    }
+    
+    .trend-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .trend-label {
+        width: auto;
+        margin-bottom: 5px;
+    }
+    
+    .trend-bar-container {
+        width: 100%;
+        margin: 5px 0;
+    }
+    
+    .trend-count {
+        width: auto;
+        text-align: left;
+    }
+    
+    h3 {
+        font-size: 1.5rem;
+    }
+    
+    h4 {
+        font-size: 1.2rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}

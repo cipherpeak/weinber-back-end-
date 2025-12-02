@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zxx">
+  <!-- Mirrored from templates.envytheme.com/fila/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 20 Nov 2025 08:55:56 GMT -->
+  <head>
+    {% load static %}
+
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <!-- Links Of CSS File -->
+    <link rel="stylesheet" href="{% static 'assets/css/sidebar-menu.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/css/simplebar.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/css/prism.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/css/quill.snow.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/css/remixicon.css' %}" />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/css/swiper-bundle.min.css' %}"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/css/jsvectormap.min.css' %}"
+    />
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}" />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      href="{% static 'assets/images/favicon.png' %}"
+    />
+
+    <!-- Title -->
+    <title>Weinber - Dashboard</title>
+    <style>
+      /* Toast Notification Styles */
+      .toast {
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+      }
+
+      .toast-success {
+        background-color: #10b981 !important;
+      }
+
+      .toast-error {
+        background-color: #ef4444 !important;
+      }
+
+      .toast-warning {
+        background-color: #f59e0b !important;
+      }
+
+      .toast-info {
+        background-color: #3b82f6 !important;
+      }
+
+      .toast-body {
+        padding: 12px 16px;
+      }
+
+      /* Toast animations */
+      .toast.show {
+        animation: slideInRight 0.3s ease-out;
+      }
+
+      .toast.hiding {
+        animation: slideOutRight 0.3s ease-in;
+      }
+
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+
+      /* Header Alignment Fix */
+      .header-area .row {
+        margin: 0;
+      }
+
+      .header-area .col-md-6 {
+        padding: 0 15px;
+      }
+
+      .left-header-content {
+        display: flex;
+        align-items: center;
+        height: 60px;
+      }
+
+      .right-header-content {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        height: 60px;
+      }
+
+      .header-right-item {
+        margin-left: 20px;
+      }
+
+      .header-right-item:first-child {
+        margin-left: 0;
+      }
+
+      /* Notification Dropdown Fix */
+      .dropdown-lg {
+        min-width: 350px !important;
+        max-width: 400px;
+      }
+
+      .notification-menu .dropdown-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .notification-menu .dropdown-item:last-child {
+        border-bottom: none;
+      }
+
+      .notification-title {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+      }
+
+      /* Badge Styles */
+      .badge-sm {
+        font-size: 11px;
+        padding: 3px 6px;
+      }
+
+      /* Leave Notification Styles */
+      .leave-notification {
+        border-left: 3px solid #ffc107;
+      }
+
+      .leave-notification:hover {
+        background-color: rgba(255, 193, 7, 0.05);
+      }
+
+      .notification-time {
+        font-size: 12px;
+        color: #6c757d;
+      }
+
+      .notification-actions {
+        margin-top: 8px;
+      }
+
+      .notification-actions .btn-sm {
+        padding: 3px 8px;
+        font-size: 12px;
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+
+  <body class="bg-body-bg">
+    <!-- Start Preloader Area -->
+    <div class="preloader" id="preloader">
+      <div class="preloader">
+        <div class="waviy position-relative">
+          <span class="d-inline-block">w</span>
+          <span class="d-inline-block">E</span>
+          <span class="d-inline-block">I</span>
+          <span class="d-inline-block">N</span>
+          <span class="d-inline-block">B</span>
+          <span class="d-inline-block">E</span>
+          <span class="d-inline-block">R</span>
+        </div>
+      </div>
+    </div>
+    <!-- End Preloader Area -->
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999">
+      {% for message in messages %}
+      <div class="toast align-items-center text-white bg-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="d-flex">
+          <div class="toast-body">
+            <div class="d-flex align-items-center">
+              <i class="material-symbols-outlined me-2 fs-16">
+                {% if message.tags == 'success' %}check_circle{% endif %}
+                {% if message.tags == 'error' or message.tags == 'danger' %}error{% endif %}
+                {% if message.tags == 'warning' %}warning{% endif %}
+                {% if message.tags == 'info' %}info{% endif %}
+              </i>
+              {{ message }}
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Start Sidebar Area -->
+    <div class="sidebar-area" id="sidebar-area">
+      <div
+        class="logo position-relative d-flex align-items-center justify-content-between"
+      >
+        <a
+          href="index.html"
+          class="d-block text-decoration-none position-relative"
+        >
+          <img src="{% static 'assets/images/WEINBER Logo-Final copy-1.png' %}" alt="logo-icon" />
+        </a>
+        <button
+          class="sidebar-burger-menu-close bg-transparent py-3 border-0 opacity-0 z-n1 position-absolute top-50 end-0 translate-middle-y"
+          id="sidebar-burger-menu-close"
+        >
+          <span
+            class="border-1 d-block for-dark-burger"
+            style="
+              border-bottom: 1px solid #475569;
+              height: 1px;
+              width: 25px;
+              transform: rotate(45deg);
+            "
+          ></span>
+          <span
+            class="border-1 d-block for-dark-burger"
+            style="
+              border-bottom: 1px solid #475569;
+              height: 1px;
+              width: 25px;
+              transform: rotate(-45deg);
+            "
+          ></span>
+        </button>
+        <button
+          class="sidebar-burger-menu bg-transparent p-0 border-0"
+          id="sidebar-burger-menu"
+        >
+          <span
+            class="border-1 d-block for-dark-burger"
+            style="border-bottom: 1px solid #475569; height: 1px; width: 25px"
+          ></span>
+          <span
+            class="border-1 d-block for-dark-burger"
+            style="
+              border-bottom: 1px solid #475569;
+              height: 1px;
+              width: 25px;
+              margin: 6px 0;
+            "
+          ></span>
+          <span
+            class="border-1 d-block for-dark-burger"
+            style="border-bottom: 1px solid #475569; height: 1px; width: 25px"
+          ></span>
+        </button>
+      </div>
+
+      <aside
+        id="layout-menu"
+        class="layout-menu menu-vertical menu active"
+        data-simplebar
+      >
+        <ul class="menu-inner">
+          <li class="menu-title small text-uppercase">
+            <span class="menu-title-text">MAIN</span>
+          </li>
+<li class="menu-item open">
+    <a href="{% url 'dashboard' %}" class="menu-link ">
+        <span class="material-symbols-outlined menu-icon">dashboard</span>
+        <span class="title">Dashboard</span>
+    </a>
+</li>
+
+          <li class="menu-title small text-uppercase">
+            <span class="menu-title-text">PAGES</span>
+          </li>
+
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle active">
+              <span class="material-symbols-outlined menu-icon"
+                >groups</span
+              >
+              <span class="title">Employee Management</span>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="{% url 'employee-manage' %}" class="menu-link">
+                  Employees
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="{% url 'create-employee' %}" class="menu-link">
+                  Create Employees
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <span class="material-symbols-outlined menu-icon">schedule</span>
+              <span class="title">Attendance</span>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="{% url 'daily-attendance' %}" class="menu-link">
+                  Daily Overview
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="{% url 'attendance-list' %}" class="menu-link">
+                  All Records
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="{% url 'leave-list' %}" class="menu-link">
+                  Leave Applications
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Add this in the PAGES section of your sidebar -->
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <span class="material-symbols-outlined menu-icon">task</span>
+              <span class="title">Task Management</span>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="{% url 'task-dashboard' %}" class="menu-link">
+                  Task Dashboard
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="{% url 'task-dashboard-list' %}" class="menu-link">
+                  All Tasks
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="{% url 'create-dashboard-task' %}" class="menu-link">
+                  Create Task
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <li class="menu-item">
+            <a href="{% url 'company-announcements-list' %}" class="menu-link">
+              <span class="material-symbols-outlined menu-icon">campaign</span>
+              <span class="title">Company Announcements</span>
+            </a>
+          </li>
+
+          <li class="menu-title small text-uppercase">
+            <span class="menu-title-text">OTHERS</span>
+          </li>
+
+          <li class="menu-item">
+            <a href="my-profile.html" class="menu-link">
+              <span class="material-symbols-outlined menu-icon"
+                >account_circle</span
+              >
+              <span class="title">My Profile</span>
+            </a>
+          </li>
+
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle active">
+              <span class="material-symbols-outlined menu-icon">settings</span>
+              <span class="title">Settings</span>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="account-settings.html" class="menu-link">
+                  Account Settings
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="change-password.html" class="menu-link">
+                  Change Password
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <li class="menu-item">
+            <a href="{% url 'admin-logout' %}" class="menu-link">
+              <span class="material-symbols-outlined menu-icon">logout</span>
+              <span class="title">Logout</span>
+            </a>
+          </li>
+        </ul>
+      </aside>
+    </div>
+    <!-- End Sidebar Area -->
+
+    <!-- Start Main Content Area -->
+    <div class="container-fluid">
+      <div class="main-content d-flex flex-column">
+        <!-- Start Header Area -->
+        <header
+          class="header-area bg-white mb-4 rounded-10 border border-white"
+          id="header-area"
+        >
+          <div class="row align-items-center mx-0">
+            <div class="col-md-6 ps-0">
+              <div class="left-header-content d-flex align-items-center h-100">
+                <ul
+                  class="d-flex align-items-center ps-0 mb-0 list-unstyled justify-content-center justify-content-md-start"
+                >
+                  <li class="d-xl-none me-3">
+                    <button
+                      class="header-burger-menu bg-transparent p-0 border-0"
+                      id="header-burger-menu"
+                    >
+                      <span
+                        class="border-1 d-block for-dark-burger"
+                        style="
+                          border-bottom: 1px solid #475569;
+                          height: 1px;
+                          width: 25px;
+                        "
+                      ></span>
+                      <span
+                        class="border-1 d-block for-dark-burger"
+                        style="
+                          border-bottom: 1px solid #475569;
+                          height: 1px;
+                          width: 25px;
+                          margin: 6px 0;
+                        "
+                      ></span>
+                      <span
+                        class="border-1 d-block for-dark-burger"
+                        style="
+                          border-bottom: 1px solid #475569;
+                          height: 1px;
+                          width: 25px;
+                        "
+                      ></span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="col-md-6 pe-0">
+              <div class="right-header-content d-flex align-items-center justify-content-end h-100">
+                <ul
+                  class="d-flex align-items-center ps-0 mb-0 list-unstyled"
+                >
+                  <li class="header-right-item light-dark-item me-3">
+                    <div class="light-dark">
+                      <button
+                        class="switch-toggle dark-btn p-0 bg-transparent lh-0 border-0"
+                        id="switch-toggle"
+                      >
+                        <span class="dark"
+                          ><i class="material-symbols-outlined"
+                            >dark_mode</i
+                          ></span
+                        >
+                        <span class="light"
+                          ><i class="material-symbols-outlined"
+                            >light_mode</i
+                          ></span
+                        >
+                      </button>
+                    </div>
+                  </li>
+
+                  <!-- Messages Dropdown with Leave Applications -->
+                  <li class="header-right-item messages-item me-3">
+                    <div class="dropdown notifications noti messages">
+                      <button
+                        class="btn btn-secondary border-0 p-0 position-relative"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <span class="material-symbols-outlined">mail</span>
+                        {% if pending_leaves_count and pending_leaves_count > 0 %}
+                        <span class="count bg-warning">{{ pending_leaves_count }}</span>
+                        {% endif %}
+                      </button>
+                      <div
+                        class="dropdown-menu dropdown-lg p-0 border-0 dropdown-menu-end"
+                        style="min-width: 380px;"
+                      >
+                        <div
+                          class="d-flex justify-content-between align-items-center notification-title"
+                        >
+                          <span class="fw-medium fs-16 text-dark">
+                            Leave Applications
+                            {% if pending_leaves_count and pending_leaves_count > 0 %}
+                            <span class="fw-normal text-body fs-14 ms-1">
+                              ({{ pending_leaves_count }} pending)
+                            </span>
+                            {% endif %}
+                          </span>
+                          {% if pending_leaves_count and pending_leaves_count > 0 %}
+                          <a href="{% url 'leave-list' %}?status=pending" 
+                             class="fs-14 text-primary fw-medium text-decoration-none">
+                            View All
+                          </a>
+                          {% endif %}
+                        </div>
+
+                        <div style="max-height: 350px" data-simplebar>
+                          <div class="notification-menu">
+                            {% if leave_notifications %}
+                              {% for notification in leave_notifications %}
+                              <div class="dropdown-item leave-notification">
+                                <div class="d-flex align-items-start">
+                                  <div class="flex-shrink-0">
+                                    <div class="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center" 
+                                         style="width: 40px; height: 40px;">
+                                      <i class="material-symbols-outlined text-warning fs-18">calendar_month</i>
+                                    </div>
+                                  </div>
+                                  <div class="flex-grow-1 ms-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                      <h6 class="fs-14 fw-semibold text-dark mb-0">
+                                        {{ notification.employee_name }}
+                                      </h6>
+                                      <small class="notification-time">
+                                        {{ notification.time|timesince }} ago
+                                      </small>
+                                    </div>
+                                    <p class="fs-13 text-body mb-1">
+                                      Applied for {{ notification.leave_type }} leave
+                                    </p>
+                                    <div class="d-flex align-items-center mb-2">
+                                      <span class="badge bg-info bg-opacity-10 text-info badge-sm me-2">
+                                        {{ notification.days }} day{{ notification.days|pluralize }}
+                                      </span>
+                                      <span class="fs-12 text-muted">
+                                        <i class="material-symbols-outlined fs-11">calendar_today</i>
+                                        {{ notification.date_range }}
+                                      </span>
+                                    </div>
+                                    <div class="notification-actions">
+                                      <a href="{% url 'leave-detail' notification.id %}" 
+                                         class="btn btn-sm btn-outline-primary">
+                                        Review
+                                      </a>
+                                      <a href="{% url 'approve-leave' notification.id %}" 
+                                         class="btn btn-sm btn-outline-success ms-2"
+                                         onclick="return confirm('Approve this leave application?')">
+                                        Approve
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              {% endfor %}
+                            {% else %}
+                              <div class="text-center py-4">
+                                <div class="mb-3">
+                                  <i class="material-symbols-outlined text-muted fs-48">check_circle</i>
+                                </div>
+                                <p class="text-muted mb-0">No pending leave applications</p>
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+
+                        <a
+                          href="{% url 'leave-list' %}"
+                          class="dropdown-item text-center text-primary d-block fw-medium border-top p-3"
+                        >
+                          Go to Leave Management
+                        </a>
+                      </div>
+                    </div>
+                  </li>
+
+                  <!-- Notifications Dropdown -->
+                  <li class="header-right-item me-3">
+                    <div class="dropdown notifications noti">
+                      <button
+                        class="btn btn-secondary border-0 p-0 position-relative"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <span class="material-symbols-outlined">notifications</span>
+                        {% if total_notifications_count and total_notifications_count > 0 %}
+                        <span class="count bg-danger">{{ total_notifications_count }}</span>
+                        {% endif %}
+                      </button>
+                      <div
+                        class="dropdown-menu dropdown-lg p-0 border-0 dropdown-menu-end"
+                        style="min-width: 350px;"
+                      >
+                        <div
+                          class="d-flex justify-content-between align-items-center notification-title"
+                        >
+                          <span class="fw-medium fs-16 text-dark">
+                            Notifications
+                            {% if total_notifications_count and total_notifications_count > 0 %}
+                            <span class="fw-normal text-body fs-14 ms-1">
+                              ({{ total_notifications_count }})
+                            </span>
+                            {% endif %}
+                          </span>
+                          {% if total_notifications_count and total_notifications_count > 0 %}
+                          <button
+                            class="p-0 m-0 bg-transparent border-0 fs-14 text-primary fw-medium"
+                          >
+                            Clear All
+                          </button>
+                          {% endif %}
+                        </div>
+
+                        <div style="max-height: 300px" data-simplebar>
+                          <div class="notification-menu">
+                            {% if leave_notifications %}
+                              {% for notification in leave_notifications %}
+                              <a href="{% url 'leave-detail' notification.id %}" class="dropdown-item unseen">
+                                <div class="d-flex align-items-start">
+                                  <div class="flex-shrink-0">
+                                    <i class="material-symbols-outlined text-warning">calendar_month</i>
+                                  </div>
+                                  <div class="flex-grow-1 ms-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                      <p class="fs-14 fw-semibold text-dark mb-0">
+                                        New Leave Application
+                                      </p>
+                                      <small class="notification-time">
+                                        {{ notification.time|timesince }} ago
+                                      </small>
+                                    </div>
+                                    <p class="fs-13 text-body mb-0">
+                                      {{ notification.employee_name }} applied for {{ notification.leave_type }} leave
+                                    </p>
+                                  </div>
+                                </div>
+                              </a>
+                              {% endfor %}
+                            {% else %}
+                              <div class="text-center py-4">
+                                <div class="mb-3">
+                                  <i class="material-symbols-outlined text-muted fs-48">notifications_off</i>
+                                </div>
+                                <p class="text-muted mb-0">No new notifications</p>
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+
+                        <a
+                          href="{% url 'leave-list' %}"
+                          class="dropdown-item text-center text-primary d-block fw-medium border-top p-3"
+                        >
+                          View All Notifications
+                        </a>
+                      </div>
+                    </div>
+                  </li>
+
+                  <!-- Profile Dropdown -->
+                  <li class="header-right-item">
+                    <div class="dropdown admin-profile">
+                      <div
+                        class="d-flex align-items-center bg-transparent border-0 text-start p-0 cursor dropdown-toggle"
+                        data-bs-toggle="dropdown"
+                        style="gap: 10px;"
+                      >
+                        <div class="flex-shrink-0 position-relative">
+                          {% if request.user.profile_pic %}
+                            <img
+                              class="rounded-circle"
+                              style="width: 40px; height: 40px; object-fit: cover;"
+                              src="{{ request.user.profile_pic.url }}"
+                              alt="{{ request.user.get_full_name }}"
+                            />
+                          {% else %}
+                            <img
+                              class="rounded-circle"
+                              style="width: 40px; height: 40px; object-fit: cover;"
+                              src="{% static 'assets/images/user-image-with-black-background.png' %}"
+                              alt="Default Avatar"
+                            />
+                          {% endif %}
+                          <span
+                            class="d-block bg-success border border-2 border-white rounded-circle position-absolute end-0 bottom-0"
+                            style="width: 11px; height: 11px"
+                          ></span>
+                        </div>
+                        <div class="d-none d-md-block">
+                          <h6 class="fw-medium fs-14 mb-0 text-dark">
+                            {% if request.user.get_full_name %}
+                              {{ request.user.get_full_name|truncatechars:15 }}
+                            {% else %}
+                              {{ request.user.username|truncatechars:15 }}
+                            {% endif %}
+                          </h6>
+                          <span class="fs-12 fw-medium text-muted">
+                            {% if request.user.role %}
+                              {{ request.user.role|title }}
+                            {% elif request.user.is_superuser %}
+                              Super Admin
+                            {% else %}
+                              User
+                            {% endif %}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div
+                        class="dropdown-menu border-0 bg-white dropdown-menu-end p-0"
+                        style="min-width: 220px;"
+                      >
+                        <div class="d-flex align-items-center p-3 border-bottom">
+                          <div class="flex-shrink-0">
+                            {% if request.user.profile_pic %}
+                              <img
+                                class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover;"
+                                src="{{ request.user.profile_pic.url }}"
+                                alt="{{ request.user.get_full_name }}"
+                              />
+                            {% else %}
+                              <img
+                                class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover;"
+                                src="{% static 'assets/images/user-image-with-black-background.png' %}"
+                                alt="Default Avatar"
+                              />
+                            {% endif %}
+                          </div>
+                          <div class="flex-grow-1 ms-3">
+                            <h6 class="fw-medium fs-15 mb-0 text-dark">
+                              {% if request.user.get_full_name %}
+                                {{ request.user.get_full_name }}
+                              {% else %}
+                                {{ request.user.username }}
+                              {% endif %}
+                            </h6>
+                            <span class="fs-13 fw-medium text-muted">
+                              {% if request.user.role %}
+                                {{ request.user.role|title }}
+                              {% elif request.user.is_superuser %}
+                                Super Admin
+                              {% else %}
+                                User
+                              {% endif %}
+                            </span>
+                          </div>
+                        </div>
+                        <ul class="admin-link mb-0 list-unstyled">
+                          <li>
+                            <a
+                              class="dropdown-item admin-item-link d-flex align-items-center text-body py-2 px-3"
+                              href="my-profile.html"
+                            >
+                              <i class="material-symbols-outlined fs-18">person</i>
+                              <span class="ms-2 fs-14">My Profile</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              class="dropdown-item admin-item-link d-flex align-items-center text-body py-2 px-3"
+                              href="settings.html"
+                            >
+                              <i class="material-symbols-outlined fs-18">settings</i>
+                              <span class="ms-2 fs-14">Settings</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a class="dropdown-item admin-item-link d-flex align-items-center text-body py-2 px-3" href="{% url 'admin-logout' %}">
+                              <i class="material-symbols-outlined fs-18">logout</i>
+                              <span class="ms-2 fs-14">Logout</span>
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </header>
+        <!-- End Header Area -->
+        
+        <!-- Main Content Area -->
+        <div class="main-content-container overflow-hidden">
+          {% block content %} {% endblock %}
+        </div>
+        
+        <div class="flex-grow-1"></div>
+
+        <!-- Start Footer Area -->
+        <footer
+          class="footer-area bg-white text-center rounded-10 rounded-bottom-0 mt-4"
+        >
+          <p class="fs-16 text-body py-3 mb-0">
+            © <span class="text-secondary">Weinber</span> 
+            {% now "Y" %} All Rights Reserved
+          </p>
+        </footer>
+        <!-- End Footer Area -->
+      </div>
+    </div>
+    <!-- End Main Content Area -->
+
+    <!-- Link Of JS File -->
+    <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+    <script src="{% static 'assets/js/quill.min.js' %}"></script>
+    <script src="{% static 'assets/js/data-table.js' %}"></script>
+    <script src="{% static 'assets/js/prism.js' %}"></script>
+    <script src="{% static 'assets/js/clipboard.min.js' %}"></script>
+    <script src="{% static 'assets/js/simplebar.min.js' %}"></script>
+    <script src="{% static 'assets/js/apexcharts.min.js' %}"></script>
+    <script src="{% static 'assets/js/echarts.min.js' %}"></script>
+    <script src="{% static 'assets/js/swiper-bundle.min.js' %}"></script>
+    <script src="{% static 'assets/js/fullcalendar.main.js' %}"></script>
+    <script src="{% static 'assets/js/jsvectormap.min.js' %}"></script>
+    <script src="{% static 'assets/js/world-merc.js' %}"></script>
+    <script src="{% static 'assets/js/custom/apexcharts.js' %}"></script>
+    <script src="{% static 'assets/js/custom/echarts.js' %}"></script>
+    <script src="{% static 'assets/js/custom/maps.js' %}"></script>
+    <script src="{% static 'assets/js/custom/custom.js' %}"></script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'9a16bb254ff1abec',t:'MTc2MzYyODk1NC45NDgwMDA='};var a=document.createElement('script');a.src='../cdn-cgi/challenge-platform/h/g/scripts/jsd/cc251d99e06e/maind41d.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+    <script>
+      // Toast Notification System
+      document.addEventListener('DOMContentLoaded', function() {
+          // Initialize all toasts
+          const toastElList = document.querySelectorAll('.toast');
+          const toastList = [...toastElList].map(toastEl => {
+              const toast = new bootstrap.Toast(toastEl, {
+                  autohide: true,
+                  delay: 5000
+              });
+              toast.show();
+              return toast;
+          });
+
+          // Auto-hide toasts after delay
+          toastList.forEach(toast => {
+              toast._element.addEventListener('hidden.bs.toast', function() {
+                  this.remove();
+              });
+          });
+
+          // Global function to show custom toasts
+          window.showToast = function(message, type = 'success') {
+              const toastContainer = document.querySelector('.toast-container');
+              const toastId = 'toast-' + Date.now();
+              
+              const toastHTML = `
+                  <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                      <div class="d-flex">
+                          <div class="toast-body">
+                              <div class="d-flex align-items-center">
+                                  <i class="material-symbols-outlined me-2 fs-16">
+                                      ${getToastIcon(type)}
+                                  </i>
+                                  ${message}
+                              </div>
+                          </div>
+                          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                      </div>
+                  </div>
+              `;
+              
+              toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+              
+              const toastElement = document.getElementById(toastId);
+              const toast = new bootstrap.Toast(toastElement, {
+                  autohide: true,
+                  delay: 5000
+              });
+              
+              toast.show();
+              
+              toastElement.addEventListener('hidden.bs.toast', function() {
+                  this.remove();
+              });
+          };
+
+          function getToastIcon(type) {
+              const icons = {
+                  'success': 'check_circle',
+                  'error': 'error',
+                  'warning': 'warning',
+                  'info': 'info',
+                  'danger': 'error'
+              };
+              return icons[type] || 'info';
+          }
+
+          // Quick Approve Leave from notification
+          window.quickApproveLeave = function(leaveId, button) {
+              if (confirm('Are you sure you want to approve this leave?')) {
+                  const originalText = button.innerHTML;
+                  button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Approving...';
+                  button.disabled = true;
+                  
+                  // Create a form and submit it
+                  const form = document.createElement('form');
+                  form.method = 'POST';
+                  form.action = `/leaves/${leaveId}/approve/`;
+                  
+                  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                  const csrfInput = document.createElement('input');
+                  csrfInput.type = 'hidden';
+                  csrfInput.name = 'csrfmiddlewaretoken';
+                  csrfInput.value = csrfToken;
+                  form.appendChild(csrfInput);
+                  
+                  document.body.appendChild(form);
+                  form.submit();
+              }
+          };
+      });
+    </script>
+  </body>
+
+  <!-- Mirrored from templates.envytheme.com/fila/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 20 Nov 2025 08:59:52 GMT -->
+</html>

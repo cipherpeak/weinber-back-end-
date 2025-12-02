@@ -1,0 +1,630 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 mt-1">
+        <h3 class="mb-0 text-dark">Leave Applications</h3>
+        <div class="d-flex gap-2">
+
+            {% if is_admin %}
+            <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#exportModal" style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">
+                <i class="material-symbols-outlined fs-16">download</i>
+                Export
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05); background-color: white !important; border-radius: 10px;">
+        <div class="card-body">
+            <form method="GET" action="" class="row g-3 align-items-end">
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium">From Date</label>
+                    <input type="date" name="from_date" class="form-control bg-white" value="{{ from_date }}" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium">To Date</label>
+                    <input type="date" name="to_date" class="form-control bg-white" value="{{ to_date }}" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium">Employee</label>
+                    <select name="employee" class="form-select bg-white" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                        <option value="">All Employees</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.employeeId }}" {% if selected_employee == emp.employeeId %}selected{% endif %}>
+                            {{ emp.employeeId }} - {{ emp.employee_name|default:"N/A" }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium">Status</label>
+                    <select name="status" class="form-select bg-white" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                        <option value="">All Status</option>
+                        {% for status in status_choices %}
+                        <option value="{{ status.0 }}" {% if selected_status == status.0 %}selected{% endif %}>
+                            {{ status.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-dark fw-medium">Leave Type</label>
+                    <select name="category" class="form-select bg-white" style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                        <option value="">All Types</option>
+                        {% for category in category_choices %}
+                        <option value="{{ category.0 }}" {% if selected_category == category.0 %}selected{% endif %}>
+                            {{ category.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-4">
+                    <div class="d-flex gap-2 h-100">
+                        <button type="submit" class="btn btn-primary text-white w-100 d-flex align-items-center justify-content-center gap-2 py-3" style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: #007bff; border-color: #007bff; color: white;">
+                            <i class="material-symbols-outlined fs-16 text-white">filter_alt</i>
+                            Apply Filters
+                        </button>
+                        <a href="{% url 'leave-list' %}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 py-3" style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">
+                            <i class="material-symbols-outlined fs-16">refresh</i>
+                            Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card bg-white rounded-10 border border-white h-100" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05); background-color: white !important; border-radius: 10px;">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="material-symbols-outlined text-warning fs-20">pending</i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1 text-dark">{{ pending_count }}</h4>
+                    <p class="mb-0 text-muted">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card bg-white rounded-10 border border-white h-100" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05); background-color: white !important; border-radius: 10px;">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="material-symbols-outlined text-success fs-20">check_circle</i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1 text-dark">{{ approved_count }}</h4>
+                    <p class="mb-0 text-muted">Approved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card bg-white rounded-10 border border-white h-100" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05); background-color: white !important; border-radius: 10px;">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="material-symbols-outlined text-danger fs-20">cancel</i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1 text-dark">{{ rejected_count }}</h4>
+                    <p class="mb-0 text-muted">Rejected</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card bg-white rounded-10 border border-white h-100" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05); background-color: white !important; border-radius: 10px;">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="rounded-circle bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="material-symbols-outlined text-secondary fs-20">event</i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1 text-dark">{{ total_leaves }}</h4>
+                    <p class="mb-0 text-muted">Total Leaves</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card bg-white rounded-10 border border-white h-100" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05); background-color: white !important; border-radius: 10px;">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="material-symbols-outlined text-info fs-20">today</i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1 text-dark">{{ active_count }}</h4>
+                    <p class="mb-0 text-muted">Active Now</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card bg-white rounded-10 border border-white h-100" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05); background-color: white !important; border-radius: 10px;">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="material-symbols-outlined text-primary fs-20">calendar_month</i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1 text-dark">{{ upcoming_count }}</h4>
+                    <p class="mb-0 text-muted">Upcoming</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaves Table -->
+    <div class="card bg-white rounded-10 border border-white mb-4" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05); background-color: white !important; border-radius: 10px;">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle w-100">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px;">Employee</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px;">Leave Details</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px;">Type</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px;">Duration</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px;">Status</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px;">Applied On</th>
+                            <th scope="col" class="fw-medium text-dark" style="border-bottom: 2px solid #e9ecef; font-weight: 600; background: #f8f9fa; padding: 16px 12px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leaves %}
+                        <tr>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <div class="d-flex align-items-center">
+                                    {% if leave.employee.profile_pic %}
+                                        <img src="{{ leave.employee.profile_pic.url }}" class="rounded-circle me-2" style="width: 40px; height: 40px;" alt="{{ leave.employee.employee_name }}">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                            <span class="text-white fw-medium">{{ leave.employee.employee_name|default:leave.employee.employeeId|first|upper }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-0 fw-medium text-dark">{{ leave.employee.employee_name|default:"Not Set" }}</h6>
+                                        <small class="text-muted">{{ leave.employee.employeeId }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ leave.employee.designation|default:"Not Set" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <h6 class="mb-1 fw-medium text-dark">{{ leave.start_date|date:"M d, Y" }} - {{ leave.end_date|date:"M d, Y" }}</h6>
+                                <small class="text-muted d-block mb-1">{{ leave.total_days }} day{{ leave.total_days|pluralize }}</small>
+                                {% if leave.reason %}
+                                    <small class="text-muted">{{ leave.reason|truncatechars:60 }}</small>
+                                {% endif %}
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-1" style="font-weight: 500; font-size: 12px;">
+                                    {{ leave.get_category_display }}
+                                </span>
+                            </td>
+                            <td class="text-dark" style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <div class="d-flex align-items-center">
+                                    <i class="material-symbols-outlined me-2 text-primary">calendar_today</i>
+                                    <div>
+                                        <div>{{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d" }}</div>
+                                        <small class="text-muted">{{ leave.total_days }} day{{ leave.total_days|pluralize }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <span class="badge bg-{% if leave.status == 'approved' %}success{% elif leave.status == 'rejected' %}danger{% elif leave.status == 'pending' %}warning{% elif leave.status == 'cancelled' %}secondary{% else %}info{% endif %} bg-opacity-10 text-{% if leave.status == 'approved' %}success{% elif leave.status == 'rejected' %}danger{% elif leave.status == 'pending' %}warning{% elif leave.status == 'cancelled' %}secondary{% else %}info{% endif %} border border-{% if leave.status == 'approved' %}success{% elif leave.status == 'rejected' %}danger{% elif leave.status == 'pending' %}warning{% elif leave.status == 'cancelled' %}secondary{% else %}info{% endif %} border-opacity-25 rounded-pill px-3 py-1" style="font-weight: 500; font-size: 12px;">
+                                    {{ leave.get_status_display }}
+                                </span>
+                                {% if leave.status == 'approved' %}
+                                    {% if leave.is_active %}
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-1 ms-1" style="font-weight: 500; font-size: 12px;">
+                                            Active
+                                        </span>
+                                    {% elif leave.is_upcoming %}
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2 py-1 ms-1" style="font-weight: 500; font-size: 12px;">
+                                            Upcoming
+                                        </span>
+                                    {% elif leave.is_past %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-2 py-1 ms-1" style="font-weight: 500; font-size: 12px;">
+                                            Completed
+                                        </span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td class="text-dark" style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                {{ leave.created_at|date:"M d, Y" }}
+                                <br>
+                                <small class="text-muted">{{ leave.created_at|date:"h:i A" }}</small>
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <div class="d-flex justify-content-end" style="gap: 8px;">
+                                    <a href="{% url 'leave-detail' leave.id %}" 
+                                       class="btn btn-outline-primary d-flex align-items-center justify-content-center gap-2 py-2 px-3" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="top" 
+                                       title="View Details"
+                                       style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #007bff; color: #007bff;">
+                                        <i class="material-symbols-outlined fs-16">visibility</i>
+                                        <span class="d-none d-sm-inline">View</span>
+                                    </a>
+                                    {% if is_admin %}
+                                        {% if leave.status == 'pending' %}
+                                        <button type="button" 
+                                                class="btn btn-outline-success d-flex align-items-center justify-content-center gap-2 py-2 px-3 approve-btn"
+                                                data-leave-id="{{ leave.id }}"
+                                                data-bs-toggle="tooltip" 
+                                                data-bs-placement="top" 
+                                                title="Approve Leave"
+                                                style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #198754; color: #198754;">
+                                            <i class="material-symbols-outlined fs-16">check</i>
+                                            <span class="d-none d-sm-inline">Approve</span>
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 py-2 px-3 reject-btn"
+                                                data-leave-id="{{ leave.id }}"
+                                                data-bs-toggle="tooltip" 
+                                                data-bs-placement="top" 
+                                                title="Reject Leave"
+                                                style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #dc3545; color: #dc3545;">
+                                            <i class="material-symbols-outlined fs-16">close</i>
+                                            <span class="d-none d-sm-inline">Reject</span>
+                                        </button>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if leave.employee == request.user and leave.status == 'pending' %}
+                                    <button type="button" 
+                                            class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 py-2 px-3 cancel-btn"
+                                            data-leave-id="{{ leave.id }}"
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-placement="top" 
+                                            title="Cancel Leave"
+                                            style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">
+                                        <i class="material-symbols-outlined fs-16">delete</i>
+                                        <span class="d-none d-sm-inline">Cancel</span>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="material-symbols-outlined fs-48 text-dark">event_busy</i>
+                                    <p class="mt-2 mb-0 text-dark">No leave applications found.</p>
+                                    <p class="mb-0">Try adjusting your filters or apply for a new leave.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Show total count if no pagination -->
+            {% if leaves %}
+            <div class="d-flex justify-content-center justify-content-sm-between align-items-center text-center flex-wrap gap-2 showing-wrap pt-15 p-20">
+                <span class="fs-15 text-dark">
+                    Showing {{ leaves|length }} of {{ total_leaves }} leave{{ total_leaves|pluralize }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Rejection Reason Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-dark" id="rejectModalLabel">Reject Leave Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rejectForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="rejectLeaveId" name="leave_id">
+                    <div class="mb-3">
+                        <label for="rejectionReason" class="form-label text-dark">Reason for Rejection</label>
+                        <textarea class="form-control" id="rejectionReason" name="rejection_reason" rows="4" placeholder="Please provide a reason for rejection..." required style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;"></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">Cancel</button>
+                        <button type="submit" class="btn btn-danger" style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: #dc3545; border-color: #dc3545; color: white;">Reject Leave</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+{% if is_admin %}
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-dark" id="exportModalLabel">Export Leaves</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="GET" action="">
+                    <div class="mb-3">
+                        <label class="form-label text-dark">Format</label>
+                        <select name="format" class="form-select" required style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                            <option value="csv">CSV</option>
+                            <option value="excel">Excel</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-dark">Date Range</label>
+                        <div class="row g-2">
+                            <div class="col">
+                                <input type="date" name="export_from_date" class="form-control" required style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                            </div>
+                            <div class="col">
+                                <input type="date" name="export_to_date" class="form-control" required style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: #007bff; border-color: #007bff; color: white;">Export</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+/* Only keeping what can't be inline - media queries and focus states */
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.1);
+    background-color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary:hover {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-success:hover {
+    background-color: #198754;
+    border-color: #198754;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn {
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+        min-height: 36px !important;
+    }
+    
+    .table th, .table td {
+        padding: 12px 8px !important;
+        font-size: 14px !important;
+    }
+    
+    .d-flex.gap-2 {
+        gap: 8px !important;
+    }
+    
+    .col-xl-2, .col-md-4, .col-sm-6 {
+        margin-bottom: 16px;
+    }
+    
+    h6 {
+        font-size: 14px;
+    }
+    
+    .badge {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Get CSRF token for AJAX requests
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    // Approve leave button handler
+    document.querySelectorAll('.approve-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const leaveId = this.getAttribute('data-leave-id');
+            if (confirm('Are you sure you want to approve this leave?')) {
+                approveLeave(leaveId);
+            }
+        });
+    });
+
+    // Reject leave button handler
+    document.querySelectorAll('.reject-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const leaveId = this.getAttribute('data-leave-id');
+            document.getElementById('rejectLeaveId').value = leaveId;
+            const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+            rejectModal.show();
+        });
+    });
+
+    // Reject form submission
+    document.getElementById('rejectForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const leaveId = document.getElementById('rejectLeaveId').value;
+        const rejectionReason = document.getElementById('rejectionReason').value;
+        
+        rejectLeave(leaveId, rejectionReason);
+    });
+
+    // Cancel leave button handler
+    document.querySelectorAll('.cancel-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const leaveId = this.getAttribute('data-leave-id');
+            if (confirm('Are you sure you want to cancel this leave application?')) {
+                cancelLeave(leaveId);
+            }
+        });
+    });
+
+    // Function to approve leave
+    function approveLeave(leaveId) {
+        fetch(`/leaves/${leaveId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Leave approved successfully!', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showToast(data.error || 'Failed to approve leave', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while approving leave', 'error');
+        });
+    }
+
+    // Function to reject leave
+    function rejectLeave(leaveId, rejectionReason) {
+        fetch(`/leaves/${leaveId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rejection_reason: rejectionReason })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Leave rejected successfully!', 'success');
+                // Close modal
+                const rejectModal = bootstrap.Modal.getInstance(document.getElementById('rejectModal'));
+                rejectModal.hide();
+                // Clear form
+                document.getElementById('rejectionReason').value = '';
+                // Reload page after delay
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showToast(data.error || 'Failed to reject leave', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while rejecting leave', 'error');
+        });
+    }
+
+    // Function to cancel leave (for employee)
+    function cancelLeave(leaveId) {
+        fetch(`/leaves/${leaveId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Leave cancelled successfully!', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showToast(data.error || 'Failed to cancel leave', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while cancelling leave', 'error');
+        });
+    }
+
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        setTimeout(function() {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
+
+    // Date input defaults
+    const today = new Date().toISOString().split('T')[0];
+    const monthAgo = new Date();
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    const monthAgoStr = monthAgo.toISOString().split('T')[0];
+    
+    // Set default date values if empty
+    const fromDateInput = document.querySelector('input[name="from_date"]');
+    const toDateInput = document.querySelector('input[name="to_date"]');
+    
+    if (fromDateInput && !fromDateInput.value) {
+        fromDateInput.value = monthAgoStr;
+    }
+    if (toDateInput && !toDateInput.value) {
+        toDateInput.value = today;
+    }
+});
+</script>
+{% endblock %}

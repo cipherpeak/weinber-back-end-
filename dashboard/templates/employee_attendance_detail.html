@@ -1,0 +1,409 @@
+<!-- employee_attendance_detail.html -->
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="main-content-container overflow-hidden" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; margin-top: 0.25rem;">
+        <h3 style="margin-bottom: 0; color: #212529; font-size: 1.5rem; font-weight: 600;">{{ employee.employee_name|default:employee.employeeId }} - Attendance Details</h3>
+
+        <nav aria-label="breadcrumb" style="display: flex;">
+            <ol style="display: flex; list-style: none; margin-bottom: 0; padding-left: 0; gap: 0.5rem; align-items: center;">
+                <li style="display: flex; align-items: center;">
+                    <a href="{% url 'dashboard' %}" style="display: flex; align-items: center; text-decoration: none;">
+                        <i class="ri-home-8-line" style="font-size: 15px; color: #007bff; margin-right: 0.25rem;"></i>
+                        <span style="font-size: 14px; color: #212529; transition: color 0.2s ease;">Dashboard</span>
+                    </a>
+                </li>
+                <li style="color: #6c757d; margin: 0 0.25rem;">/</li>
+                <li style="display: flex; align-items: center;">
+                    <a href="{% url 'attendance-list' %}" style="text-decoration: none;">
+                        <span style="font-size: 14px; color: #212529; transition: color 0.2s ease;">Attendance</span>
+                    </a>
+                </li>
+                <li style="color: #6c757d; margin: 0 0.25rem;">/</li>
+                <li style="display: flex; align-items: center;">
+                    <a href="{% url 'daily-attendance' %}?date={{ selected_date|date:'Y-m-d' }}" style="text-decoration: none;">
+                        <span style="font-size: 14px; color: #212529; transition: color 0.2s ease;">Daily Overview</span>
+                    </a>
+                </li>
+                <li style="color: #6c757d; margin: 0 0.25rem;">/</li>
+                <li style="display: flex; align-items: center;">
+                    <span style="color: #6c757d; font-size: 14px;">Employee Details</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Date Filter and Employee Info -->
+    <div style="background-color: white; border-radius: 10px; border: 1px solid white; margin-bottom: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+        <div style="padding: 1.5rem;">
+            <div style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem; align-items: center;">
+                <div style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                    <div style="display: flex; align-items: center;">
+                        {% if employee.profile_pic %}
+                            <img src="{{ employee.profile_pic.url }}" style="border-radius: 50%; width: 60px; height: 60px;" alt="{{ employee.employee_name }}">
+                        {% else %}
+                            <div style="border-radius: 50%; background-color: #6c757d; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px;">
+                                <span style="color: white; font-weight: bold; font-size: 20px;">{{ employee.employee_name|default:employee.employeeId|first|upper }}</span>
+                            </div>
+                        {% endif %}
+                        <div style="margin-left: 0.75rem;">
+                            <h4 style="margin-bottom: 0.25rem; color: #212529; font-size: 1.25rem; font-weight: 600;">{{ employee.employee_name|default:"Not Set" }}</h4>
+                            <p style="margin-bottom: 0.25rem; color: #6c757d;">ID: {{ employee.employeeId }}</p>
+                            <p style="margin-bottom: 0; color: #6c757d;">{{ employee.get_department_display }} • {{ employee.get_designation_display }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+                    <form method="GET" action="" style="display: flex; gap: 0.5rem;">
+                        <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                        <button type="submit" style="display: flex; align-items: center; gap: 0.5rem; background-color: #007bff; border: 1px solid #007bff; color: white; border-radius: 6px; font-weight: 500; padding: 10px 16px; font-size: 14px; cursor: pointer; transition: all 0.2s ease;">
+                            <i class="material-symbols-outlined" style="font-size: 16px; margin-right: 0.5rem;">search</i>
+                            View
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem; margin-bottom: 1.5rem;">
+        <div style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: rgba(0, 123, 255, 0.1); border: 1px solid rgba(0, 123, 255, 0.25); border-radius: 10px;">
+                <div style="padding: 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin-bottom: 0.5rem; color: #212529; font-size: 1.5rem; font-weight: 600;">
+                                {% if check_in %}{{ check_in.check_time }}{% else %}-{% endif %}
+                            </h4>
+                            <span style="color: #212529;">Check In Time</span>
+                        </div>
+                        <div style="flex-shrink: 0;">
+                            <i class="material-symbols-outlined" style="color: #007bff; font-size: 32px;">login</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: rgba(25, 135, 84, 0.1); border: 1px solid rgba(25, 135, 84, 0.25); border-radius: 10px;">
+                <div style="padding: 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin-bottom: 0.5rem; color: #212529; font-size: 1.5rem; font-weight: 600;">
+                                {% if check_out %}{{ check_out.check_time }}{% else %}-{% endif %}
+                            </h4>
+                            <span style="color: #212529;">Check Out Time</span>
+                        </div>
+                        <div style="flex-shrink: 0;">
+                            <i class="material-symbols-outlined" style="color: #198754; font-size: 32px;">logout</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.25); border-radius: 10px;">
+                <div style="padding: 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin-bottom: 0.5rem; color: #212529; font-size: 1.5rem; font-weight: 600;">{{ break_records|length }}</h4>
+                            <span style="color: #212529;">Total Breaks</span>
+                        </div>
+                        <div style="flex-shrink: 0;">
+                            <i class="material-symbols-outlined" style="color: #ffc107; font-size: 32px;">free_breakfast</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: rgba(13, 202, 240, 0.1); border: 1px solid rgba(13, 202, 240, 0.25); border-radius: 10px;">
+                <div style="padding: 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin-bottom: 0.5rem; color: #212529; font-size: 1.5rem; font-weight: 600;">{{ working_hours }}</h4>
+                            <span style="color: #212529;">Working Hours</span>
+                        </div>
+                        <div style="flex-shrink: 0;">
+                            <i class="material-symbols-outlined" style="color: #0dcaf0; font-size: 32px;">schedule</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Break Records -->
+    <div style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem;">
+        <div style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: white; border-radius: 10px; border: 1px solid white; margin-bottom: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+                <div style="background-color: transparent; border: 0; padding: 0.75rem 1.5rem;">
+                    <h5 style="margin-bottom: 0; color: #212529; font-size: 1.125rem; font-weight: 500;">
+                        <i class="material-symbols-outlined" style="margin-right: 0.5rem; font-size: 20px; color: #ffc107;">free_breakfast</i>
+                        Break Records ({{ break_records|length }})
+                    </h5>
+                </div>
+                <div style="padding: 0;">
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Break Type</th>
+                                    <th style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Start Time</th>
+                                    <th style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">End Time</th>
+                                    <th style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for break in break_records %}
+                                <tr>
+                                    <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                        <span style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.25); border-radius: 50rem; padding: 4px 12px; font-size: 12px; font-weight: 500;">
+                                            {{ break.display_break_type }}
+                                        </span>
+                                    </td>
+                                    <td style="color: #212529; border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">{{ break.break_start_time }}</td>
+                                    <td style="color: #212529; border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">{{ break.break_end_time|default:"-" }}</td>
+                                    <td style="color: #212529; border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">{{ break.duration }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 4rem 1rem; color: #6c757d;">
+                                        No break records for this date
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="flex: 0 0 50%; max-width: 50%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: white; border-radius: 10px; border: 1px solid white; margin-bottom: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+                <div style="background-color: transparent; border: 0; padding: 0.75rem 1.5rem;">
+                    <h5 style="margin-bottom: 0; color: #212529; font-size: 1.125rem; font-weight: 500;">
+                        <i class="material-symbols-outlined" style="margin-right: 0.5rem; font-size: 20px; color: #007bff;">schedule</i>
+                        Attendance Timeline
+                    </h5>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div class="timeline" style="position: relative; padding-left: 30px;">
+                        {% for record in attendance_records %}
+                        <div class="timeline-item mb-3" style="position: relative; padding-bottom: 10px;">
+                            <div class="timeline-marker" style="position: absolute; left: -30px; top: 5px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px; background-color: {% if record.check_type == 'in' %}#198754{% else %}#dc3545{% endif %};"></div>
+                            <div class="timeline-content" style="background: #f8f9fa; padding: 10px 15px; border-radius: 8px; border-left: 3px solid {% if record.check_type == 'in' %}#198754{% else %}#dc3545{% endif %};">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: 500; color: #212529;">
+                                        {% if record.check_type == 'in' %}
+                                            Checked In
+                                        {% else %}
+                                            Checked Out
+                                        {% endif %}
+                                    </span>
+                                    <span style="color: #6c757d;">{{ record.check_time }}</span>
+                                </div>
+                                {% if record.location %}
+                                <small style="color: #6c757d; display: block; margin-top: 4px;">Location: {{ record.location }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div style="text-align: center; padding: 4rem 1rem; color: #6c757d;">
+                            No attendance records for this date
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to buttons
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(btn => {
+        if (btn.style.backgroundColor === 'rgb(0, 123, 255)') {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.backgroundColor = '#0056b3';
+                btn.style.borderColor = '#0056b3';
+                btn.style.transform = 'translateY(-1px)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.backgroundColor = '#007bff';
+                btn.style.borderColor = '#007bff';
+                btn.style.transform = 'translateY(0)';
+            });
+        }
+    });
+
+    // Add hover effects to breadcrumb links
+    const breadcrumbLinks = document.querySelectorAll('a[style*="color: #212529; transition"]');
+    breadcrumbLinks.forEach(link => {
+        link.addEventListener('mouseenter', () => {
+            link.style.color = '#007bff';
+        });
+        link.addEventListener('mouseleave', () => {
+            link.style.color = '#212529';
+        });
+    });
+
+    // Add hover effects to table rows
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+        if (row.cells.length > 1) { // Don't apply to empty rows
+            row.addEventListener('mouseenter', () => {
+                row.style.backgroundColor = '#f8f9fa';
+            });
+            row.addEventListener('mouseleave', () => {
+                row.style.backgroundColor = '#ffffff';
+            });
+        }
+    });
+
+    // Form control focus effect
+    const dateInput = document.querySelector('input[type="date"]');
+    if (dateInput) {
+        dateInput.addEventListener('focus', () => {
+            dateInput.style.borderColor = '#007bff';
+            dateInput.style.boxShadow = '0 0 0 0.2rem rgba(0, 123, 255, 0.1)';
+        });
+        dateInput.addEventListener('blur', () => {
+            dateInput.style.borderColor = '#dee2e6';
+            dateInput.style.boxShadow = 'none';
+        });
+    }
+
+    // Responsive adjustments
+    function handleResponsive() {
+        const viewportWidth = window.innerWidth;
+        const cards = document.querySelectorAll('div[style*="flex: 0 0 25%"]');
+        const layoutColumns = document.querySelectorAll('div[style*="flex: 0 0 50%"]');
+        
+        if (viewportWidth < 768) {
+            // Stack cards vertically on mobile
+            cards.forEach(card => {
+                card.style.flex = '0 0 100%';
+                card.style.maxWidth = '100%';
+                card.style.marginBottom = '0.75rem';
+            });
+            
+            // Stack layout columns vertically
+            layoutColumns.forEach(col => {
+                col.style.flex = '0 0 100%';
+                col.style.maxWidth = '100%';
+            });
+            
+            // Adjust table padding for mobile
+            const tableCells = document.querySelectorAll('th, td');
+            tableCells.forEach(cell => {
+                cell.style.padding = '12px 8px';
+            });
+            
+            // Adjust card body padding for mobile
+            const cardBodies = document.querySelectorAll('div[style*="padding: 1.5rem"]');
+            cardBodies.forEach(card => {
+                card.style.padding = '1rem';
+            });
+            
+            // Adjust employee info layout for mobile
+            const employeeInfo = document.querySelector('div[style*="flex: 0 0 50%"]');
+            if (employeeInfo) {
+                employeeInfo.style.flex = '0 0 100%';
+                employeeInfo.style.maxWidth = '100%';
+                employeeInfo.style.marginBottom = '1rem';
+            }
+            
+            // Adjust button sizing for mobile
+            const formButton = document.querySelector('form button');
+            if (formButton) {
+                formButton.style.padding = '8px 12px';
+                formButton.style.fontSize = '13px';
+            }
+        } else {
+            // Reset to desktop styles
+            cards.forEach(card => {
+                card.style.flex = '0 0 25%';
+                card.style.maxWidth = '25%';
+                card.style.marginBottom = '0';
+            });
+            
+            layoutColumns.forEach(col => {
+                col.style.flex = '0 0 50%';
+                col.style.maxWidth = '50%';
+            });
+            
+            // Reset table padding
+            const tableCells = document.querySelectorAll('th, td');
+            tableCells.forEach(cell => {
+                cell.style.padding = '16px 12px';
+            });
+            
+            // Reset card body padding
+            const cardBodies = document.querySelectorAll('div[style*="padding: 1.5rem"]');
+            cardBodies.forEach(card => {
+                card.style.padding = '1.5rem';
+            });
+            
+            // Reset employee info layout
+            const employeeInfo = document.querySelector('div[style*="flex: 0 0 50%"]:first-child');
+            if (employeeInfo) {
+                employeeInfo.style.flex = '0 0 50%';
+                employeeInfo.style.maxWidth = '50%';
+                employeeInfo.style.marginBottom = '0';
+            }
+            
+            // Reset button sizing
+            const formButton = document.querySelector('form button');
+            if (formButton) {
+                formButton.style.padding = '10px 16px';
+                formButton.style.fontSize = '14px';
+            }
+        }
+    }
+    
+    // Run on load and resize
+    handleResponsive();
+    window.addEventListener('resize', handleResponsive);
+});
+
+// Add custom styles for better UX
+const style = document.createElement('style');
+style.textContent = `
+.btn-action {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: white;
+    text-decoration: none;
+}
+
+.btn-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action-view {
+    color: #198754;
+    border-color: #198754;
+}
+
+.btn-action-view:hover {
+    background-color: white;
+}
+`;
+document.head.appendChild(style);
+</script>
+
+{% endblock %}

@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; margin-top: 0.25rem;">
+        <h3 style="margin-bottom: 0; color: #212529; font-size: 1.5rem; font-weight: 600;">Daily Attendance Overview</h3>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'attendance-list' %}" style="display: flex; align-items: center; gap: 0.5rem; background-color: white; border: 1px solid #6c757d; color: #6c757d; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; text-decoration: none; transition: all 0.2s ease;">
+                <i class="material-symbols-outlined" style="font-size: 16px;">list</i>
+                All Records
+            </a>
+        </div>
+    </div>
+
+    <!-- Display Messages -->
+    {% if messages %}
+    <div style="margin-bottom: 1.5rem;">
+        {% for message in messages %}
+        <div role="alert" style="border: none; border-radius: 8px; {% if message.tags == 'success' %}background-color: #d1f2eb; color: #0f5132;{% elif message.tags == 'error' or message.tags == 'danger' %}background-color: #f8d7da; color: #721c24;{% elif message.tags == 'warning' %}background-color: #fff3cd; color: #856404;{% elif message.tags == 'info' %}background-color: #d1ecf1; color: #0c5460;{% endif %} padding: 1rem; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center;">
+                <i class="material-symbols-outlined" style="margin-right: 0.5rem; font-size: 16px;">
+                    {% if message.tags == 'success' %}check_circle{% endif %}
+                    {% if message.tags == 'error' or message.tags == 'danger' %}error{% endif %}
+                    {% if message.tags == 'warning' %}warning{% endif %}
+                    {% if message.tags == 'info' %}info{% endif %}
+                </i>
+                <span style="font-weight: 500;">{{ message }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Date Filter Card -->
+    <div style="background-color: white; border-radius: 10px; border: 1px solid white; margin-bottom: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+        <div style="padding: 1.5rem;">
+            <form method="GET" action="" style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem; align-items: flex-end; gap: 1rem;">
+                <div style="flex: 0 0 calc(25% - 1rem); max-width: calc(25% - 1rem); padding-right: 0.75rem; padding-left: 0.75rem;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #212529;">Select Date</label>
+                    <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" style="display: block; width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #212529; background-color: #ffffff !important; border: 1px solid #dee2e6; border-radius: 6px;">
+                </div>
+                <div style="flex: 0 0 calc(25% - 1rem); max-width: calc(25% - 1rem); padding-right: 0.75rem; padding-left: 0.75rem;">
+                    <div style="display: flex; gap: 0.5rem; height: 100%;">
+                        <button type="submit" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #007bff; border: 1px solid #007bff; color: white; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; width: 100%; cursor: pointer; transition: all 0.2s ease;">
+                            <i class="material-symbols-outlined" style="font-size: 16px; color: white;">calendar_today</i>
+                            View Attendance
+                        </button>
+                        <a href="{% url 'attendance-list' %}" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: white; border: 1px solid #6c757d; color: #6c757d; border-radius: 6px; font-weight: 500; padding: 12px 24px; font-size: 14px; min-height: 48px; width: 100%; text-decoration: none; transition: all 0.2s ease;">
+                            <i class="material-symbols-outlined" style="font-size: 16px;">list</i>
+                            All Records
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Daily Summary Cards -->
+    <div style="display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem; margin-bottom: 1.5rem;">
+        <div style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: rgba(0, 123, 255, 0.1); border: 1px solid rgba(0, 123, 255, 0.25); border-radius: 10px;">
+                <div style="padding: 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin-bottom: 0.5rem; color: #212529; font-size: 1.5rem; font-weight: 600;">{{ total_employees }}</h4>
+                            <span style="color: #212529;">Total Employees</span>
+                        </div>
+                        <div style="flex-shrink: 0;">
+                            <i class="material-symbols-outlined" style="color: #007bff; font-size: 32px;">groups</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: rgba(25, 135, 84, 0.1); border: 1px solid rgba(25, 135, 84, 0.25); border-radius: 10px;">
+                <div style="padding: 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin-bottom: 0.5rem; color: #212529; font-size: 1.5rem; font-weight: 600;">{{ present_count }}</h4>
+                            <span style="color: #212529;">Present Today</span>
+                        </div>
+                        <div style="flex-shrink: 0;">
+                            <i class="material-symbols-outlined" style="color: #198754; font-size: 32px;">check_circle</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.25); border-radius: 10px;">
+                <div style="padding: 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin-bottom: 0.5rem; color: #212529; font-size: 1.5rem; font-weight: 600;">{{ absent_count }}</h4>
+                            <span style="color: #212529;">Absent Today</span>
+                        </div>
+                        <div style="flex-shrink: 0;">
+                            <i class="material-symbols-outlined" style="color: #ffc107; font-size: 32px;">cancel</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="flex: 0 0 25%; max-width: 25%; padding-right: 0.75rem; padding-left: 0.75rem;">
+            <div style="background-color: rgba(13, 202, 240, 0.1); border: 1px solid rgba(13, 202, 240, 0.25); border-radius: 10px;">
+                <div style="padding: 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin-bottom: 0.5rem; color: #212529; font-size: 1.5rem; font-weight: 600;">{{ selected_date|date:"M d, Y" }}</h4>
+                            <span style="color: #212529;">Selected Date</span>
+                        </div>
+                        <div style="flex-shrink: 0;">
+                            <i class="material-symbols-outlined" style="color: #0dcaf0; font-size: 32px;">event</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Attendance Table -->
+    <div style="background-color: white; border-radius: 10px; border: 1px solid white; margin-bottom: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+        <div style="padding: 0;">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Employee</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Status</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Check In</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Check Out</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Breaks</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Total Break Time</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Working Hours</th>
+                            <th scope="col" style="font-weight: 600; color: #212529; border-bottom: 2px solid #e9ecef; padding: 16px 12px; background: #f8f9fa; text-align: left;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in daily_data %}
+                        <tr style="background-color: #ffffff;">
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <div style="display: flex; align-items: center;">
+                                    {% if data.employee.profile_pic %}
+                                        <img src="{{ data.employee.profile_pic.url }}" style="border-radius: 50%; margin-right: 0.5rem; width: 35px; height: 35px;" alt="{{ data.employee.employee_name }}">
+                                    {% else %}
+                                        <div style="border-radius: 50%; background-color: #6c757d; display: flex; align-items: center; justify-content: center; margin-right: 0.5rem; width: 35px; height: 35px;">
+                                            <span style="color: white; font-weight: bold; font-size: 0.875rem;">{{ data.employee.employee_name|default:data.employee.employeeId|first|upper }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div style="font-weight: 500; color: #212529; font-size: 0.875rem;">{{ data.employee.employee_name|default:"Not Set" }}</div>
+                                        <small style="color: #6c757d;">{{ data.employee.employeeId }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                {% if data.status == 'Present' %}
+                                    <span style="background-color: rgba(25, 135, 84, 0.1); color: #198754; border: 1px solid rgba(25, 135, 84, 0.25); border-radius: 50rem; padding: 4px 12px; font-size: 12px; font-weight: 500;">
+                                        Present
+                                    </span>
+                                {% else %}
+                                    <span style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.25); border-radius: 50rem; padding: 4px 12px; font-size: 12px; font-weight: 500;">
+                                        Absent
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="color: #212529; border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                {% if data.check_in %}
+                                    {{ data.check_in.check_time }}
+                                {% else %}
+                                    <span style="color: #6c757d;">-</span>
+                                {% endif %}
+                            </td>
+                            <td style="color: #212529; border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                {% if data.check_out %}
+                                    {{ data.check_out.check_time }}
+                                {% else %}
+                                    <span style="color: #6c757d;">-</span>
+                                {% endif %}
+                            </td>
+                            <td style="color: #212529; border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">{{ data.break_count }}</td>
+                            <td style="color: #212529; border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">{{ data.total_break_time }}</td>
+                            <td style="color: #212529; border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">{{ data.working_hours }}</td>
+                            <td style="border-bottom: 1px solid #f8f9fa; vertical-align: middle; padding: 16px 12px;">
+                                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                    <a href="{% url 'employee-attendance-detail' data.employee.id %}?date={{ selected_date|date:'Y-m-d' }}" 
+                                       style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: white; border: 1px solid #007bff; color: #007bff; border-radius: 6px; font-weight: 500; padding: 8px 12px; font-size: 14px; text-decoration: none; transition: all 0.2s ease;"
+                                       title="View Detailed Report">
+                                        <i class="material-symbols-outlined" style="font-size: 16px;">visibility</i>
+                                        <span style="display: none;">View</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr style="background-color: #ffffff;">
+                            <td colspan="8" style="text-align: center; padding: 4rem 1rem;">
+                                <div style="color: #6c757d;">
+                                    <i class="material-symbols-outlined" style="font-size: 48px; color: #212529; display: block; margin-bottom: 1rem;">schedule</i>
+                                    <p style="margin: 0.5rem 0; color: #212529;">No attendance data found for this date.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to buttons
+    const buttons = document.querySelectorAll('button, a[style*="border:"]');
+    buttons.forEach(btn => {
+        if (btn.style.backgroundColor === 'rgb(0, 123, 255)') {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.backgroundColor = '#0056b3';
+                btn.style.borderColor = '#0056b3';
+                btn.style.transform = 'translateY(-1px)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.backgroundColor = '#007bff';
+                btn.style.borderColor = '#007bff';
+                btn.style.transform = 'translateY(0)';
+            });
+        } else if (btn.style.borderColor === 'rgb(108, 117, 125)') {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.backgroundColor = '#6c757d';
+                btn.style.borderColor = '#6c757d';
+                btn.style.color = 'white';
+                btn.style.transform = 'translateY(-1px)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.backgroundColor = 'white';
+                btn.style.borderColor = '#6c757d';
+                btn.style.color = '#6c757d';
+                btn.style.transform = 'translateY(0)';
+            });
+        } else if (btn.style.borderColor === 'rgb(0, 123, 255)' && btn.style.backgroundColor === 'white') {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.backgroundColor = '#007bff';
+                btn.style.borderColor = '#007bff';
+                btn.style.color = 'white';
+                btn.style.transform = 'translateY(-1px)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.backgroundColor = 'white';
+                btn.style.borderColor = '#007bff';
+                btn.style.color = '#007bff';
+                btn.style.transform = 'translateY(0)';
+            });
+        }
+    });
+
+    // Add hover effects to table rows
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', () => {
+            row.style.backgroundColor = '#f8f9fa';
+        });
+        row.addEventListener('mouseleave', () => {
+            row.style.backgroundColor = '#ffffff';
+        });
+    });
+
+    // Form controls focus effect
+    const formControls = document.querySelectorAll('input[type="date"], input[type="text"], select, textarea');
+    formControls.forEach(control => {
+        control.addEventListener('focus', () => {
+            control.style.borderColor = '#007bff';
+            control.style.boxShadow = '0 0 0 0.2rem rgba(0, 123, 255, 0.1)';
+        });
+        control.addEventListener('blur', () => {
+            control.style.borderColor = '#dee2e6';
+            control.style.boxShadow = 'none';
+        });
+    });
+
+    // Add responsive behavior
+    function handleResponsive() {
+        const viewportWidth = window.innerWidth;
+        const tableHeaders = document.querySelectorAll('th');
+        const actionButtons = document.querySelectorAll('a[title="View Detailed Report"] span');
+        
+        if (viewportWidth < 768) {
+            // Adjust table padding for mobile
+            tableHeaders.forEach(th => {
+                th.style.padding = '12px 8px';
+            });
+            
+            const tableCells = document.querySelectorAll('td');
+            tableCells.forEach(td => {
+                td.style.padding = '12px 8px';
+            });
+            
+            // Show button text on mobile
+            actionButtons.forEach(span => {
+                span.style.display = 'inline';
+            });
+            
+            // Adjust button padding for mobile
+            const buttons = document.querySelectorAll('button, a[style*="border:"]');
+            buttons.forEach(btn => {
+                btn.style.padding = '10px 16px';
+                btn.style.fontSize = '13px';
+                btn.style.minHeight = '44px';
+            });
+            
+            // Adjust card padding for mobile
+            const cardBodies = document.querySelectorAll('div[style*="padding: 1.5rem"]');
+            cardBodies.forEach(card => {
+                card.style.padding = '1rem';
+            });
+            
+            // Adjust summary cards layout for mobile
+            const summaryCards = document.querySelectorAll('div[style*="flex: 0 0 25%"]');
+            summaryCards.forEach(card => {
+                card.style.flex = '0 0 50%';
+                card.style.maxWidth = '50%';
+            });
+        } else {
+            // Reset to desktop styles
+            tableHeaders.forEach(th => {
+                th.style.padding = '16px 12px';
+            });
+            
+            const tableCells = document.querySelectorAll('td');
+            tableCells.forEach(td => {
+                td.style.padding = '16px 12px';
+            });
+            
+            // Hide button text on desktop
+            actionButtons.forEach(span => {
+                span.style.display = 'none';
+            });
+            
+            // Reset button styles
+            const buttons = document.querySelectorAll('button, a[style*="border:"]');
+            buttons.forEach(btn => {
+                btn.style.padding = '12px 24px';
+                btn.style.fontSize = '14px';
+                btn.style.minHeight = '48px';
+            });
+            
+            // Reset card padding
+            const cardBodies = document.querySelectorAll('div[style*="padding: 1.5rem"]');
+            cardBodies.forEach(card => {
+                card.style.padding = '1.5rem';
+            });
+            
+            // Reset summary cards layout
+            const summaryCards = document.querySelectorAll('div[style*="flex: 0 0 25%"]');
+            summaryCards.forEach(card => {
+                card.style.flex = '0 0 25%';
+                card.style.maxWidth = '25%';
+            });
+        }
+    }
+    
+    // Run on load and resize
+    handleResponsive();
+    window.addEventListener('resize', handleResponsive);
+});
+</script>
+{% endblock %}

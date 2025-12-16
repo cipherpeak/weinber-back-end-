@@ -1,9 +1,23 @@
 from rest_framework import serializers
-from .models import Employee
+from .models import Employee,Company
+
+
 
 class EmployeeLoginSerializer(serializers.Serializer):
-    employeeId = serializers.CharField()
-    password = serializers.CharField(write_only=True)
+    employeeId = serializers.CharField(
+        required=True,  
+        allow_blank=False, 
+        max_length=50,  
+        trim_whitespace=True  
+    )
+    password = serializers.CharField(
+        write_only=True, 
+        required=True,
+        allow_blank=False,
+        min_length=4
+    )
+
+
 
 class EmployeeSerializer(serializers.ModelSerializer):
     profile_pic = serializers.SerializerMethodField()
@@ -24,11 +38,11 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return None
     
     def get_app_icon(self, obj):
-        if obj.app_icon:
+        if obj.company and obj.company.logo:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.app_icon.url)
-            return obj.app_icon.url
-        return None  
+                return request.build_absolute_uri(obj.company.logo.url)
+            return obj.company.logo.url
+        return None
     
 

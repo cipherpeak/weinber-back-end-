@@ -1,6 +1,6 @@
 from django.db import models
 from authapp.models import Employee
-
+from django.contrib.postgres.fields import ArrayField
 
 class Task(models.Model):
     TASK_STATUS_CHOICES = [
@@ -126,6 +126,140 @@ class ServiceTask(models.Model):
     
 
 
+class ServiceTaskDax(models.Model):
+    # Location/Site Choices from the screenshot
+    DET_SITES_CHOICES = [
+        ('mq_dubai_showroom', 'MQ Dubai Showroom (SZR)'),
+        ('mq_delta_service', 'MQ Delta Service Center'),
+        ('mq_ai_quad_service', 'MQ AI Quad Service Center'),
+        ('mq_shirajah_showroom', 'MQ Shirajah Showroom'),
+        ('mq_abu_dhabi_showroom', 'MQ Abu Dhabi Showroom'),
+        ('mq_abu_dhabi_service', 'MQ Abu Dhabi Service Center'),
+        ('mq_ai_ain_showroom', 'MQ AI Ain Showroom'),
+        ('mq_ai_ain_service', 'MQ AI Ain Service Center'),
+        ('mq_fujianni_showroom', 'MQ Fujianni Showroom'),
+        ('mq_fujianni_service', 'MQ Fujianni Service Center'),
+        ('premier_car_care', 'Premier Car Care (Ellie Motors)'),
+        ('camps_ai_quad', 'Camps (AI Quad)'),
+        ('emperor_garage', 'Emperor Garage'),
+        ('five_star_garage', 'Five Star Garage'),
+        ('golden_palace', 'Golden Palace'),
+        ('pos_automotive', 'POS Automotive'),
+        ('office', 'Office'),
+        ('others', 'Others'),
+    ]
+    
+    # Services List Choices
+    SERVICES_CHOICES = [
+        ('exterior_detailing', 'Exterior Detailing'),
+        ('interior_detailing', 'Interior Detailing'),
+        ('interior_exterior_detailing', 'Interior & Exterior Detailing'),
+        ('tinting', 'Tinting'),
+        ('ceramic_coating', 'Ceramic Coating'),
+        ('borophene_coating', 'Borophene Coating'),
+        ('graphene_coating', 'Graphene Coating'),
+        ('ppf', 'PPF'),
+        ('others', 'Others'),
+    ]
+    
+    # Tinting Type Choices
+    TINTING_TYPE_CHOICES = [
+        ('standard', 'Standard Tinting'),
+        ('premium', 'Premium Tinting'),
+        ('roll', 'Roll'),
+        ('meter', 'Meter'),
+    ]
+    
+    # Tinting Percentage Choices
+    TINTING_PERCENTAGE_CHOICES = [
+        ('0', '0%'),
+        ('30', '30%'),
+        ('50', '50%'),
+        ('70', '70%'),
+    ]
+    
+    # Coating Layer Choices (ArrayField for multiple selection)
+    COATING_LAYER_CHOICES = [
+        ('1_layer', '1 Layer'),
+        ('2_layer', '2 Layer'),
+        ('3_layer', '3 Layer'),
+    ]
+    
+    # PPF Type Choices
+    PPF_TYPE_CHOICES = [
+        ('ppf_prudence', 'PPF PRUDENCE'),
+        ('ppf_st_quard', 'PPF ST. QUARD'),
+        ('ppf_matte', 'PPF MATTE'),
+        ('ppf_magnifence', 'PPF MAGNIFENCE'),
+        ('ppf_dazzling_silver', 'PPF DAZZLING SILVER'),
+        ('roll', 'Roll'),
+        ('meter', 'Meter'),
+    ]
+    
+    # Invoice/Purchase Request Status
+    INVOICE_STATUS_CHOICES = [
+        ('invoice_received', 'Invoice Received'),
+        ('pri_received', 'PRI Received'),
+        ('yes', 'Yes'),
+        ('no', 'No'),
+    ]
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='service_dax_tasks')
+    detailing_site = models.CharField(max_length=50, choices=DET_SITES_CHOICES)
+    other_site_name = models.CharField(max_length=255, blank=True, null=True)
+    service_type = models.CharField(max_length=50, choices=SERVICES_CHOICES)
+    tinting_type = models.CharField(max_length=20, choices=TINTING_TYPE_CHOICES, blank=True, null=True)
+    tinting_percentage = models.CharField(max_length=3, choices=TINTING_PERCENTAGE_CHOICES, blank=True, null=True)
+    tinting_custom_text = models.CharField(max_length=255, blank=True, null=True)
+    coating_layers = ArrayField(
+        models.CharField(max_length=10, choices=COATING_LAYER_CHOICES),
+        blank=True,
+        null=True,
+        default=list
+    )
+    ppf_type = models.CharField(max_length=30, choices=PPF_TYPE_CHOICES, blank=True, null=True)
+    ppf_custom_text = models.CharField(max_length=255, blank=True, null=True)
+    remarks = models.TextField(blank=True, null=True, help_text="Additional materials used or other notes")
+    chassis_no = models.CharField(max_length=100, blank=True, null=True)
+    invoice_status = models.CharField(max_length=20, choices=INVOICE_STATUS_CHOICES, blank=True, null=True)
+    invoice_pri_image = models.ImageField(upload_to='invoice_pri_images/', blank=True, null=True)
+    work_location = models.CharField(max_length=255)
+    shared_staff_details = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"DAX Service - {self.get_service_type_display()} at {self.work_location}"
+    
+    def get_detailing_site_display(self):
+        """Get display name for detailing site"""
+        return dict(self.DET_SITES_CHOICES).get(self.detailing_site, self.detailing_site)
+    
+    def get_coating_layers_display(self):
+        """Get display names for coating layers"""
+        if not self.coating_layers:
+            return []
+        choices_dict = dict(self.COATING_LAYER_CHOICES)
+        return [choices_dict.get(layer, layer) for layer in self.coating_layers]
+    
+
+
+
+
+class TaskProgressImage(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='progress_images')
+    image = models.ImageField(upload_to='task_progress_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.task.heading} - Image {self.id}"
+
+
+
+
+
+
+
 class Duty(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -146,10 +280,4 @@ class TaskDuty(models.Model):
     def __str__(self):
         return f"{self.task.heading} - {self.duty.name}"
 
-class TaskProgressImage(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='progress_images')
-    image = models.ImageField(upload_to='task_progress_images/')
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return f"{self.task.heading} - {self.percentage_completed}%"    
+

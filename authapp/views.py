@@ -18,10 +18,8 @@ class EmployeeLoginView(APIView):
                 return Response({'error': 'Invalid Employee ID or Password'}, status=status.HTTP_401_UNAUTHORIZED)
 
             if employee.check_password(password):
-                # Generate JWT tokens
                 refresh = RefreshToken.for_user(employee)
                 
-                # Serialize employee data with request context
                 employee_serializer = EmployeeSerializer(employee, context={'request': request})
                 
                 return Response({

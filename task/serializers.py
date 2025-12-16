@@ -160,3 +160,63 @@ class PendingQueueSerializer(serializers.ModelSerializer):
         if obj.vehicle_color:
             details.append(obj.vehicle_color)
         return ' - '.join(details) if details else (obj.vehicle_details or "")
+    
+
+
+
+
+from .models import ServiceTaskDax
+
+
+class ServiceTaskDaxSerializer(serializers.ModelSerializer):
+    # Nested serializer for vehicle after images
+    vehicle_images_after = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ServiceTaskDax
+        fields = [
+            'id',
+            'task',
+            'detailing_site',
+            'other_site_name',
+            'service_type',
+            'tinting_type',
+            'tinting_percentage',
+            'tinting_custom_text',
+            'coating_layers',
+            'ppf_type',
+            'ppf_custom_text',
+            'remarks',
+            'chassis_no',
+            'vehicle_make_model',
+            'invoice_status',
+            'invoice_pri_image',
+            'vehicle_images_after',  
+            'work_location',
+            'work_start_time',
+            'work_end_time',
+            'time_taken',
+            'shared_staff_details',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'time_taken']
+    
+    def get_vehicle_images_after(self, obj):
+        """Get vehicle after images as array of objects with image URL and created date"""
+        after_images = obj.after_images.all()  
+        serializer = ProgressImageSerializer(
+            after_images, 
+            many=True,
+            context=self.context  
+        )
+        return serializer.data
+    
+    def validate_coating_layers(self, value):
+        if value:
+            valid_choices = ['1_layer', '2_layer', '3_layer']
+            for layer in value:
+                if layer not in valid_choices:
+                    raise serializers.ValidationError(f"Invalid coating layer: {layer}")
+        return value
+    

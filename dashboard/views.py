@@ -1,23 +1,25 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.views import View
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, JsonResponse
-from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from authapp.models import Employee
-from home.models import AttendanceCheck, BreakTimer, CompanyAnnouncement
+from home.models import AttendanceCheck, BreakTimer, CompanyAnnouncement,Leave
 from profileapp.models import Document, VisaDetails
 from django.views.generic import ListView, CreateView, DeleteView
 from django.urls import reverse_lazy
-from datetime import datetime, timedelta
-from django.db.models import Q, Count, Sum
+from datetime import datetime, timedelta,date
 from django.utils import timezone
 from django.core.paginator import Paginator
-from django.shortcuts import render, get_object_or_404
 from django.views.decorators.cache import never_cache
+from django.db.models import Count, Sum, Avg, Q
+from django.db.models.functions import TruncMonth
+from django.core.mail import send_mail
+from django.conf import settings
+from task.models import Task, DeliveryTask, OfficeTask, ServiceTask, TaskDuty, TaskProgressImage
 
 
 class AdminLogin(View):
@@ -90,10 +92,7 @@ class AdminDashboard(LoginRequiredMixin, View):
     login_url = '/admin-login/'
     
     def get(self, request):
-        from datetime import date, timedelta
-        from django.db.models import Count, Sum, Avg, Q
-        from django.utils import timezone
-        from django.db.models.functions import TruncMonth
+
         
         today = date.today()
         current_month = today.month
@@ -101,11 +100,9 @@ class AdminDashboard(LoginRequiredMixin, View):
         first_day_of_month = date(current_year, current_month, 1)
         last_day_of_month = date(current_year, current_month + 1, 1) - timedelta(days=1) if current_month < 12 else date(current_year, 12, 31)
         
-        # Calculate start and end of week (Monday to Sunday)
         start_of_week = today - timedelta(days=today.weekday())
         end_of_week = start_of_week + timedelta(days=6)
         
-        # 1. Employee Statistics
         total_employees = Employee.objects.filter(
             is_superuser=False, 
             is_active=True,
@@ -456,7 +453,8 @@ class EmployeeCreate(LoginRequiredMixin, View):
                 'document_choices': VisaDetails.DOCUMENT_TYPES,
             }
             return render(request, 'create_customer.html', context)
-        
+
+
 class EmployeeDetailView(LoginRequiredMixin, View):
     login_url = '/admin-login/'
     
@@ -492,8 +490,6 @@ class EmployeeDetailView(LoginRequiredMixin, View):
 
 
 
-from django.core.mail import send_mail
-from django.conf import settings
 
 class EmployeeEditView(LoginRequiredMixin, View):
     login_url = '/admin-login/'
@@ -660,9 +656,7 @@ class ForgotPasswordView(LoginRequiredMixin, View):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)        
         
 
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required
+
 
 class EmployeeDeleteView(LoginRequiredMixin, View):
     login_url = '/admin-login/'
@@ -769,7 +763,7 @@ class AttendanceListView(LoginRequiredMixin,View):
         attendance_records = queryset.order_by('employee__employeeId', 'check_date', 'check_type')
         
         # Group records by employee and date for template context
-        grouped_records = {}
+        grouped_records = {} 
         for record in attendance_records:
             key = f"{record.employee.employeeId}_{record.check_date}"
             if key not in grouped_records:
@@ -978,8 +972,7 @@ class DailyAttendanceView(LoginRequiredMixin,View):
     
 
 
-from django.db.models import Count, Q
-from task.models import Task, DeliveryTask, OfficeTask, ServiceTask, TaskDuty, TaskProgressImage
+
 
 class TaskDashboardView(LoginRequiredMixin, View):
     login_url = '/admin-login/'
@@ -1255,14 +1248,6 @@ class CreateTaskView(LoginRequiredMixin, View):
         
 
 
-from django.views.generic import View
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, redirect
-from django.db.models import Count, Q
-from datetime import date, datetime
-from django.utils import timezone
-from django.contrib import messages
-from home.models import Leave, Employee
 
 
 class LeaveListView(LoginRequiredMixin, View):

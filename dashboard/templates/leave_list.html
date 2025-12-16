@@ -258,9 +258,12 @@
                                         <button type="button" 
                                                 class="btn btn-outline-success d-flex align-items-center justify-content-center gap-2 py-2 px-3 approve-btn"
                                                 data-leave-id="{{ leave.id }}"
-                                                data-bs-toggle="tooltip" 
-                                                data-bs-placement="top" 
-                                                title="Approve Leave"
+                                                data-employee-name="{{ leave.employee.employee_name }}"
+                                                data-start-date="{{ leave.start_date|date:'M d, Y' }}"
+                                                data-end-date="{{ leave.end_date|date:'M d, Y' }}"
+                                                data-days="{{ leave.total_days }}"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#approveModal"
                                                 style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #198754; color: #198754;">
                                             <i class="material-symbols-outlined fs-16">check</i>
                                             <span class="d-none d-sm-inline">Approve</span>
@@ -268,9 +271,8 @@
                                         <button type="button" 
                                                 class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 py-2 px-3 reject-btn"
                                                 data-leave-id="{{ leave.id }}"
-                                                data-bs-toggle="tooltip" 
-                                                data-bs-placement="top" 
-                                                title="Reject Leave"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#rejectModal"
                                                 style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #dc3545; color: #dc3545;">
                                             <i class="material-symbols-outlined fs-16">close</i>
                                             <span class="d-none d-sm-inline">Reject</span>
@@ -281,9 +283,11 @@
                                     <button type="button" 
                                             class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 py-2 px-3 cancel-btn"
                                             data-leave-id="{{ leave.id }}"
-                                            data-bs-toggle="tooltip" 
-                                            data-bs-placement="top" 
-                                            title="Cancel Leave"
+                                            data-start-date="{{ leave.start_date|date:'M d, Y' }}"
+                                            data-end-date="{{ leave.end_date|date:'M d, Y' }}"
+                                            data-days="{{ leave.total_days }}"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#cancelModal"
                                             style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">
                                         <i class="material-symbols-outlined fs-16">delete</i>
                                         <span class="d-none d-sm-inline">Cancel</span>
@@ -319,27 +323,110 @@
     </div>
 </div>
 
-<!-- Rejection Reason Modal -->
+<!-- Approve Confirmation Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border: none; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div class="modal-header bg-white" style="background-color: white !important; border-bottom: 1px solid #e9ecef; border-radius: 10px 10px 0 0;">
+                <h5 class="modal-title text-dark" id="approveModalLabel">Approve Leave Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-white" style="background-color: white !important;">
+                <p class="mb-3 text-dark">Are you sure you want to approve this leave application?</p>
+                <div class="alert alert-info bg-info bg-opacity-10 border border-info border-opacity-25">
+                    <div class="d-flex">
+                        <i class="material-symbols-outlined text-info me-2">info</i>
+                        <div>
+                            <small class="text-dark">
+                                <strong>Leave Details:</strong><br>
+                                Employee: <span id="approveEmployeeName"></span><br>
+                                Period: <span id="approveStartDate"></span> to <span id="approveEndDate"></span><br>
+                                Duration: <span id="approveDays"></span> day(s)<br>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-white" style="background-color: white !important; border-top: 1px solid #e9ecef; border-radius: 0 0 10px 10px;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 6px; font-weight: 500; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">Cancel</button>
+                <button type="button" id="confirmApproveBtn" class="btn btn-success" style="border-radius: 6px; font-weight: 500; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: #198754; border-color: #198754; color: white !important;">
+                    <i class="material-symbols-outlined fs-16 me-1">check</i>
+                    <span class="text-white">Approve Leave</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Confirmation Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content" style="border: none; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div class="modal-header bg-white" style="background-color: white !important; border-bottom: 1px solid #e9ecef; border-radius: 10px 10px 0 0;">
                 <h5 class="modal-title text-dark" id="rejectModalLabel">Reject Leave Application</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form id="rejectForm">
-                    {% csrf_token %}
-                    <input type="hidden" id="rejectLeaveId" name="leave_id">
-                    <div class="mb-3">
-                        <label for="rejectionReason" class="form-label text-dark">Reason for Rejection</label>
-                        <textarea class="form-control" id="rejectionReason" name="rejection_reason" rows="4" placeholder="Please provide a reason for rejection..." required style="border-radius: 6px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 14px; background-color: #ffffff !important;"></textarea>
+            <div class="modal-body bg-white" style="background-color: white !important;">
+                <p class="mb-3 text-dark">Please provide a reason for rejecting this leave application.</p>
+                <div class="mb-3">
+                    <label for="rejectionReason" class="form-label text-dark">Reason for Rejection <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="rejectionReason" name="rejection_reason" rows="4" placeholder="Enter the reason for rejection..." required></textarea>
+                </div>
+                <div class="alert alert-warning bg-warning bg-opacity-10 border border-warning border-opacity-25" style="background-color: #fff3cd; border-color: #ffecb5; color: #664d03;">
+                    <div class="d-flex">
+                        <i class="material-symbols-outlined text-warning me-2">warning</i>
+                        <div>
+                            <small class="text-dark">
+                                <strong>Note:</strong> This action cannot be undone. The employee will be notified of the rejection.
+                            </small>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">Cancel</button>
-                        <button type="submit" class="btn btn-danger" style="border-radius: 6px; font-weight: 500; border: 1px solid; transition: all 0.2s ease; padding: 8px 16px; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; background-color: #dc3545; border-color: #dc3545; color: white;">Reject Leave</button>
+                </div>
+            </div>
+            <div class="modal-footer bg-white" style="background-color: white !important; border-top: 1px solid #e9ecef; border-radius: 0 0 10px 10px;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 6px; font-weight: 500; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">Cancel</button>
+                <button type="button" id="confirmRejectBtn" class="btn btn-danger" style="border-radius: 6px; font-weight: 500; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: #dc3545; border-color: #dc3545; color: white !important;">
+                    <i class="material-symbols-outlined fs-16 me-1">close</i>
+                    <span class="text-white">Reject Leave</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border: none; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div class="modal-header bg-white" style="background-color: white !important; border-bottom: 1px solid #e9ecef; border-radius: 10px 10px 0 0;">
+                <h5 class="modal-title text-dark" id="cancelModalLabel">Cancel Leave Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-white" style="background-color: white !important;">
+                <p class="mb-3 text-dark">Are you sure you want to cancel this leave application?</p>
+                <div class="alert alert-warning bg-warning bg-opacity-10 border border-warning border-opacity-25" style="background-color: #fff3cd; border-color: #ffecb5; color: #664d03;">
+                    <div class="d-flex">
+                        <i class="material-symbols-outlined text-warning me-2">warning</i>
+                        <div>
+                            <small class="text-dark">
+                                <strong>Important:</strong> This action cannot be undone. Once cancelled, this leave application will be removed from pending requests.
+                            </small>
+                        </div>
                     </div>
-                </form>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="material-symbols-outlined text-info fs-14">info</i>
+                        Leave Details: <span id="cancelStartDate"></span> to <span id="cancelEndDate"></span> (<span id="cancelDays"></span> days)
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer bg-white" style="background-color: white !important; border-top: 1px solid #e9ecef; border-radius: 0 0 10px 10px;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 6px; font-weight: 500; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: white; border-color: #6c757d; color: #6c757d;">No, Keep It</button>
+                <button type="button" id="confirmCancelBtn" class="btn btn-danger" style="border-radius: 6px; font-weight: 500; transition: all 0.2s ease; padding: 10px 20px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; background-color: #dc3545; border-color: #dc3545; color: white !important;">
+                    <i class="material-symbols-outlined fs-16 me-1">delete</i>
+                    <span>Yes, Cancel Leave</span>
+                </button>
             </div>
         </div>
     </div>
@@ -474,43 +561,80 @@ document.addEventListener('DOMContentLoaded', function() {
         return document.querySelector('[name=csrfmiddlewaretoken]').value;
     }
 
-    // Approve leave button handler
+    // Variables to store current leave ID
+    let currentLeaveId = null;
+    let currentRejectReason = '';
+
+    // Approve button click handler
     document.querySelectorAll('.approve-btn').forEach(function(button) {
         button.addEventListener('click', function() {
-            const leaveId = this.getAttribute('data-leave-id');
-            if (confirm('Are you sure you want to approve this leave?')) {
-                approveLeave(leaveId);
-            }
+            currentLeaveId = this.getAttribute('data-leave-id');
+            
+            // Set modal content
+            document.getElementById('approveEmployeeName').textContent = this.getAttribute('data-employee-name');
+            document.getElementById('approveStartDate').textContent = this.getAttribute('data-start-date');
+            document.getElementById('approveEndDate').textContent = this.getAttribute('data-end-date');
+            document.getElementById('approveDays').textContent = this.getAttribute('data-days');
         });
     });
 
-    // Reject leave button handler
+    // Confirm approve button handler
+    document.getElementById('confirmApproveBtn').addEventListener('click', function() {
+        if (currentLeaveId) {
+            approveLeave(currentLeaveId);
+            // Close modal
+            const approveModal = bootstrap.Modal.getInstance(document.getElementById('approveModal'));
+            approveModal.hide();
+        }
+    });
+
+    // Reject button click handler
     document.querySelectorAll('.reject-btn').forEach(function(button) {
         button.addEventListener('click', function() {
-            const leaveId = this.getAttribute('data-leave-id');
-            document.getElementById('rejectLeaveId').value = leaveId;
-            const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
-            rejectModal.show();
+            currentLeaveId = this.getAttribute('data-leave-id');
+            // Clear previous reason
+            document.getElementById('rejectionReason').value = '';
         });
     });
 
-    // Reject form submission
-    document.getElementById('rejectForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const leaveId = document.getElementById('rejectLeaveId').value;
-        const rejectionReason = document.getElementById('rejectionReason').value;
+    // Confirm reject button handler
+    document.getElementById('confirmRejectBtn').addEventListener('click', function() {
+        const rejectionReason = document.getElementById('rejectionReason').value.trim();
         
-        rejectLeave(leaveId, rejectionReason);
+        if (!rejectionReason) {
+            alert('Please provide a reason for rejection.');
+            document.getElementById('rejectionReason').focus();
+            return;
+        }
+        
+        if (currentLeaveId) {
+            rejectLeave(currentLeaveId, rejectionReason);
+            // Close modal
+            const rejectModal = bootstrap.Modal.getInstance(document.getElementById('rejectModal'));
+            rejectModal.hide();
+        }
     });
 
-    // Cancel leave button handler
+    // Cancel button click handler
     document.querySelectorAll('.cancel-btn').forEach(function(button) {
         button.addEventListener('click', function() {
-            const leaveId = this.getAttribute('data-leave-id');
-            if (confirm('Are you sure you want to cancel this leave application?')) {
-                cancelLeave(leaveId);
-            }
+            currentLeaveId = this.getAttribute('data-leave-id');
+            
+            // Set modal content
+            document.getElementById('cancelStartDate').textContent = this.getAttribute('data-start-date');
+            document.getElementById('cancelEndDate').textContent = this.getAttribute('data-end-date');
+            document.getElementById('cancelDays').textContent = this.getAttribute('data-days');
         });
+    });
+
+    // Confirm cancel button handler
+    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+        if (currentLeaveId) {
+            cancelLeave(currentLeaveId);
+            // Close modal
+            const cancelModal = bootstrap.Modal.getInstance(document.getElementById('cancelModal'));
+            cancelModal.hide();
+        }
     });
 
     // Function to approve leave
@@ -554,11 +678,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 showToast(data.message || 'Leave rejected successfully!', 'success');
-                // Close modal
-                const rejectModal = bootstrap.Modal.getInstance(document.getElementById('rejectModal'));
-                rejectModal.hide();
-                // Clear form
-                document.getElementById('rejectionReason').value = '';
                 // Reload page after delay
                 setTimeout(() => {
                     location.reload();
@@ -624,6 +743,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (toDateInput && !toDateInput.value) {
         toDateInput.value = today;
+    }
+    
+    // Function to show toast notifications (you need to implement this or use your existing)
+    function showToast(message, type = 'info') {
+        // Implement your toast notification here
+        // This is just a basic alert for demonstration
+        alert(message);
     }
 });
 </script>

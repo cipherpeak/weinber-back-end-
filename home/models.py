@@ -2,6 +2,7 @@ from datetime import timezone
 from django.db import models
 from authapp.models import Employee
 from django.core.validators import MinValueValidator
+from django.utils import timezone
 
 
 
@@ -13,7 +14,7 @@ class AttendanceCheck(models.Model):
     
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='attendance_checks')
     check_type = models.CharField(max_length=10, choices=CHECK_TYPE_CHOICES)
-    check_date = models.DateField(blank=True,null=True)  
+    # check_date = models.DateField(blank=True,null=True)   chnage here
     check_time = models.CharField(max_length=100)
     time_zone = models.CharField(max_length=100)
     location = models.CharField(max_length=255, blank=True, null=True)
@@ -26,10 +27,10 @@ class AttendanceCheck(models.Model):
     def __str__(self):
         return f"{self.employee.employeeId} - {self.check_type} - {self.check_date}"
     
-    def save(self, *args, **kwargs):
-        if not self.check_date:
-            self.check_date = timezone.now().date()
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.check_date:
+    #         self.check_date = timezone.now().date()
+    #     super().save(*args, **kwargs)
     
 
 class BreakTimer(models.Model):
@@ -43,11 +44,11 @@ class BreakTimer(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='break_timers')
     break_type = models.CharField(max_length=20, choices=BREAK_TYPE_CHOICES)
     custom_break_type = models.CharField(max_length=100, blank=True, null=True)  
-    duration = models.CharField(max_length=20,default="10 min")  
+    duration = models.CharField(max_length=20,null=True,blank=True)  
     break_start_time = models.CharField(max_length=50) 
     break_end_time = models.CharField(max_length=50, blank=True, null=True) 
-    date = models.DateField(auto_now_add=True) 
-    reason = models.TextField(blank=True, null=True)
+    # date = models.DateField(auto_now_add=True)  change here
+    # reason = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=255, blank=True, null=True)
     end_reason = models.TextField(blank=True, null=True) 
 
@@ -74,7 +75,6 @@ class BreakHistory(models.Model):
 
 
 
-from django.utils import timezone
 
 class CompanyAnnouncement(models.Model):
     heading = models.CharField(max_length=255)
@@ -97,6 +97,7 @@ class CompanyAnnouncement(models.Model):
 
 
 class Leave(models.Model):
+
     LEAVE_CATEGORY_CHOICES = [
         ('annual', 'Annual Leave'),
         ('sick', 'Sick Leave'),
@@ -126,7 +127,7 @@ class Leave(models.Model):
         Employee,
         on_delete=models.CASCADE,
         related_name='leaves'
-                        )
+    )
 
     # Basic leave information
     category = models.CharField(
@@ -135,13 +136,13 @@ class Leave(models.Model):
         verbose_name="Category of Leave"
     )
     
-    start_date = models.DateField(
-        verbose_name="From"
-    )
+    # start_date = models.DateField(
+    #     verbose_name="From"
+    # )
     
-    end_date = models.DateField(
-        verbose_name="To"
-    )
+    # end_date = models.DateField(
+    #     verbose_name="To"
+    # ) change here
     
     total_days = models.DecimalField(
         max_digits=5,
@@ -156,17 +157,17 @@ class Leave(models.Model):
         null=True
     )
     
-    passport_required_from = models.DateField(
-        blank=True,
-        null=True,
-        verbose_name="Passport Required From"
-    )
+    # passport_required_from = models.DateField(
+    #     blank=True,
+    #     null=True,
+    #     verbose_name="Passport Required From"
+    # )
 
-    passport_required_to = models.DateField(
-        blank=True,
-        null=True,
-        verbose_name="Passport Required to"
-    )
+    # passport_required_to = models.DateField(
+    #     blank=True,
+    #     null=True,
+    #     verbose_name="Passport Required to"
+    # ) change here
     
     address_during_leave = models.TextField(
         blank=True,
@@ -175,13 +176,28 @@ class Leave(models.Model):
     )
     
     ticket_eligibility = models.CharField(
-        max_length=20,
+        max_length=100,
         choices=TICKET_ELIGIBILITY_CHOICES,
         blank=True,
         null=True,
         verbose_name="Ticket Eligibility"
     )
     
+
+    # Attachments
+    attachment = models.FileField(
+        upload_to='leave_attachments/',
+        blank=True,
+        null=True,
+        verbose_name="Attach Media"
+    )
+
+    # signature = models.TextField(
+    #     blank=True,
+    #     null=True,
+    #     verbose_name="Signature"
+    # ) change here
+
     # Status and approval
     status = models.CharField(
         max_length=20,
@@ -206,20 +222,17 @@ class Leave(models.Model):
         blank=True,
         null=True
     )
-    
-    # Attachments
-    attachment = models.FileField(
-        upload_to='leave_attachments/',
-        blank=True,
-        null=True,
-        verbose_name="Attach Media"
-    )
-    
-    signature = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Signature"
-    )
+
+
+    # response look like
+    # category of leave 
+    # from and to
+    # total number of leave 
+    # reason
+    # reason for rejection
+    # status
+
+
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)

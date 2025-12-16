@@ -17,17 +17,17 @@ class VisaDetails(models.Model):
         related_name='visa_details'
     )
     
-    visa_number = models.CharField(max_length=100, blank=True, null=True)
+    # visa_number = models.CharField(max_length=100, blank=True, null=True)
     visa_expiry_date = models.DateField(blank=True, null=True)
-    
-    passport_number = models.CharField(max_length=100, blank=True, null=True)
-    passport_expiry_date = models.DateField(blank=True, null=True)
-
     emirates_id_number = models.CharField(max_length=100, blank=True, null=True)
     emirates_id_expiry = models.DateField(blank=True, null=True)
-    
+    passport_number = models.CharField(max_length=100, blank=True, null=True)
+    passport_expiry_date = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+
+    
 
     def __str__(self):
         return f"Visa Details - {self.employee.employeeId}"

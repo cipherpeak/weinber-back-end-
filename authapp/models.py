@@ -99,6 +99,18 @@ class Employee(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(
         max_length=20, choices=ROLE_CHOICES, default="employee"
     )
+    
+    home_address = models.TextField(blank=True, null=True)
+
+    nationality = models.CharField(max_length=20, blank=True, null=True)
+
+    date_of_birth = models.DateField(auto_now_add=True,blank=True, null=True)
+
+    emergency_contact_name = models.CharField(max_length=20, blank=True, null=True)
+
+    emergency_contact_number = models.CharField(max_length=20, blank=True, null=True)
+
+    emergency_contact_relation = models.CharField(max_length=20, blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(

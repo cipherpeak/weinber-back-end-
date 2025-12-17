@@ -8,5 +8,11 @@ urlpatterns = [
     path('personal-information/update/', EmployeePersonalInfoUpdateView.as_view(), name='personal-information-update'),
     path('visa-documents/', VisaDocumentsView.as_view(), name='visa-documents'),
     path('visa-documents/update/', VisaDocumentsUpdateView.as_view(), name='visa-documents-update'),
+    path('vehicle-details/', VehicleDetailsAPIView.as_view(), name='vehicle-details'),
+    path('vehicle-report/', ReportVehicleIssueAPIView.as_view(), name='vehicle-report'),
+
+
+
+    
 
 ]

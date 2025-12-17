@@ -14,7 +14,7 @@ class AttendanceCheck(models.Model):
     
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='attendance_checks')
     check_type = models.CharField(max_length=10, choices=CHECK_TYPE_CHOICES)
-    # check_date = models.DateField(blank=True,null=True)   chnage here
+    check_date = models.CharField(max_length=100)  
     check_time = models.CharField(max_length=100)
     time_zone = models.CharField(max_length=100)
     location = models.CharField(max_length=255, blank=True, null=True)
@@ -26,11 +26,7 @@ class AttendanceCheck(models.Model):
     
     def __str__(self):
         return f"{self.employee.employeeId} - {self.check_type} - {self.check_date}"
-    
-    # def save(self, *args, **kwargs):
-    #     if not self.check_date:
-    #         self.check_date = timezone.now().date()
-    #     super().save(*args, **kwargs)
+
     
 
 class BreakTimer(models.Model):
@@ -47,8 +43,7 @@ class BreakTimer(models.Model):
     duration = models.CharField(max_length=20,null=True,blank=True)  
     break_start_time = models.CharField(max_length=50) 
     break_end_time = models.CharField(max_length=50, blank=True, null=True) 
-    # date = models.DateField(auto_now_add=True)  change here
-    # reason = models.TextField(blank=True, null=True)
+    date = models.CharField(max_length=100, blank=True, null=True)  
     location = models.CharField(max_length=255, blank=True, null=True)
     end_reason = models.TextField(blank=True, null=True) 
 
@@ -57,8 +52,7 @@ class BreakTimer(models.Model):
 
     @property
     def display_break_type(self):
-        """Return custom break type if break_type is 'other', otherwise the display name"""
-        if self.break_type == '' and self.custom_break_type:
+        if self.break_type == 'other' and self.custom_break_type:
             return self.custom_break_type
         return self.get_break_type_display()
     

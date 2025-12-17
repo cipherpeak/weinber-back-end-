@@ -35,12 +35,12 @@ class CheckInAPIView(APIView):
                 )
             
             employee = request.user
-            today = timezone.now().date()
-            
+            check_date = serializer.validated_data['check_date']
+
             existing_checkin = AttendanceCheck.objects.filter(
                 employee=employee,
-                check_date=today,
-                check_type='in'
+                check_type='in',
+                check_date=check_date
             ).exists()
             
             if existing_checkin:
@@ -56,18 +56,18 @@ class CheckInAPIView(APIView):
             checkin = AttendanceCheck.objects.create(
                 employee=employee,
                 check_type='in',
-                check_date=today,
+                check_date=check_date,                 
                 check_time=serializer.validated_data['check_time'],
                 time_zone=serializer.validated_data['time_zone'],
                 location=serializer.validated_data['location'],
-                reason=reason_to_store, 
+                reason=reason_to_store,
             )
             
             return Response({
                 "status": "success",
                 "message": "Checked in successfully",
                 "check_id": checkin.id,
-                "check_date": str(checkin.check_date),
+                "check_date": checkin.check_date,
                 "check_time": checkin.check_time,
                 "time_zone": checkin.time_zone,
                 "location": checkin.location,
@@ -79,6 +79,9 @@ class CheckInAPIView(APIView):
                 {"error": str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+
+
 
 class CheckOutAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -93,13 +96,12 @@ class CheckOutAPIView(APIView):
                 )
             
             employee = request.user
-            today = timezone.now().date()
-            
-            # Check if user has checked in today
+            check_date = serializer.validated_data['check_date']
+
             checkin_today = AttendanceCheck.objects.filter(
                 employee=employee,
-                check_date=today,
-                check_type='in'
+                check_type='in',
+                check_date=check_date
             ).exists()
             
             if not checkin_today:
@@ -108,11 +110,10 @@ class CheckOutAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Check if already checked out today
             existing_checkout = AttendanceCheck.objects.filter(
                 employee=employee,
-                check_date=today,
-                check_type='out'
+                check_type='out',
+                check_date=check_date
             ).exists()
             
             if existing_checkout:
@@ -121,10 +122,8 @@ class CheckOutAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Check if there's an active break (break without end time)
             active_break = BreakTimer.objects.filter(
                 employee=employee,
-                date=today,
                 break_end_time__isnull=True
             ).exists()
             
@@ -138,18 +137,18 @@ class CheckOutAPIView(APIView):
             checkout = AttendanceCheck.objects.create(
                 employee=employee,
                 check_type='out',
-                check_date=today,
+                check_date=serializer.validated_data['check_date'],
                 check_time=serializer.validated_data['check_time'],
                 time_zone=serializer.validated_data['time_zone'],
                 location=serializer.validated_data['location'],
-                reason=serializer.validated_data['reason']  # Reason is mandatory for checkout
+                reason=serializer.validated_data['reason']  
             )
             
             return Response({
                 "status": "success",
                 "message": "Checked out successfully",
                 "check_id": checkout.id,
-                "check_date": str(checkout.check_date),
+                "check_date": checkout.check_date,
                 "check_time": checkout.check_time,
                 "time_zone": checkout.time_zone,
                 "location": checkout.location,
@@ -165,128 +164,118 @@ class CheckOutAPIView(APIView):
 
 class StartBreakAPIView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request):
-        try:
-            serializer = BreakSerializer(data=request.data)
-            if not serializer.is_valid():
-                return Response(
-                    {"error": serializer.errors}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            employee = request.user
-            today = timezone.now().date()
-            
-            # Check if checked in today
-            checkin_today = AttendanceCheck.objects.filter(
-                employee=employee,
-                check_date=today,
-                check_type='in'
-            ).exists()
-            
-            if not checkin_today:
-                return Response(
-                    {"error": "You need to check in first"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Check if already checked out today
-            checkout_today = AttendanceCheck.objects.filter(
-                employee=employee,
-                check_date=today,
-                check_type='out'
-            ).exists()
-            
-            if checkout_today:
-                return Response(
-                    {"error": "You have already checked out for today"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Check if there's already an active break (break without end time)
-            active_break = BreakTimer.objects.filter(
-                employee=employee,
-                date=today,
-                break_end_time__isnull=True
-            ).exists()
-            
-            if active_break:
-                return Response(
-                    {"error": "You already have an active break"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            break_data = {
-                'employee': employee,
-                'break_type': serializer.validated_data['break_type'],
-                'duration': serializer.validated_data['duration'],
-                'break_start_time': serializer.validated_data['break_start_time'],
-                'date': today,  
-                'location': serializer.validated_data['location'],
-                'reason': serializer.validated_data.get('reason', '')
-            }
-            
-            # Add custom break type if provided
-            if serializer.validated_data['break_type'] == '':
-                break_data['custom_break_type'] = serializer.validated_data.get('custom_break_type', '')
-            
-            break_timer = BreakTimer.objects.create(**break_data)
-            
-            return Response({
-                "status": "success",
-                "message": "Break started successfully",
-            }, status=status.HTTP_201_CREATED)
-            
-        except Exception as e:
+        serializer = BreakSerializer(data=request.data)
+        if not serializer.is_valid():
             return Response(
-                {"error": str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
             )
+
+        employee = request.user
+        today = serializer.validated_data['date']
+
+        if not AttendanceCheck.objects.filter(
+            employee=employee,
+            check_date=today,
+            check_type='in'
+        ).exists():
+            return Response(
+                {"error": "You need to check in first"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if AttendanceCheck.objects.filter(
+            employee=employee,
+            check_date=today,
+            check_type='out'
+        ).exists():
+            return Response(
+                {"error": "You have already checked out for today"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if BreakTimer.objects.filter(
+            employee=employee,
+            date=today,
+            break_end_time__isnull=True
+        ).exists():
+            return Response(
+                {"error": "You already have an active break"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        break_data = {
+            'employee': employee,
+            'break_type': serializer.validated_data['break_type'],
+            'duration': serializer.validated_data['duration'],
+            'break_start_time': serializer.validated_data['break_start_time'],
+            'date': today,
+            'location': serializer.validated_data['location'],
+        }
+
+        if serializer.validated_data['break_type'] == 'other':
+            break_data['custom_break_type'] = serializer.validated_data.get('custom_break_type')
+
+        BreakTimer.objects.create(**break_data)
+
+        return Response({
+            "status": "success",
+            "message": "Break started successfully",
+        }, status=status.HTTP_201_CREATED)
+
 
 class EndBreakAPIView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request):
-        try:
-            serializer = EndBreakSerializer(data=request.data)
-            if not serializer.is_valid():
-                return Response(
-                    {"error": serializer.errors}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            employee = request.user
-            today = timezone.now().date()
-            
-            # Get active break (break without end time)
-            active_break = BreakTimer.objects.filter(
-                employee=employee,
-                date=today,
-                break_end_time__isnull=True
-            ).first()
-            
-            if not active_break:
-                return Response(
-                    {"error": "No active break found"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            active_break.break_end_time = serializer.validated_data['break_end_time']
-            active_break.location = serializer.validated_data['location']
-            active_break.end_reason = serializer.validated_data.get('end_reason', '')  
-            active_break.save()
-            
-            return Response({
-                "status": "success",
-                "message": "Break ended successfully",
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
+        serializer = EndBreakSerializer(data=request.data)
+        if not serializer.is_valid():
             return Response(
-                {"error": str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
             )
+
+        employee = request.user
+        today = serializer.validated_data['date']
+
+        if AttendanceCheck.objects.filter(
+            employee=employee,
+            check_date=today,
+            check_type='out'
+        ).exists():
+            return Response(
+                {"error": "You have already checked out"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        active_break = BreakTimer.objects.filter(
+            employee=employee,
+            date=today,
+            break_end_time__isnull=True
+        ).first()
+
+        if not active_break:
+            return Response(
+                {"error": "No active break found"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        reason = serializer.validated_data.get('end_reason')
+        active_break.break_end_time = serializer.validated_data['break_end_time']
+        active_break.end_reason = reason.strip() if reason and reason.strip() else None
+        active_break.location = serializer.validated_data['location']
+        active_break.save()
+
+        return Response({
+            "status": "success",
+            "message": "Break ended successfully",
+        }, status=status.HTTP_200_OK)
+    
+
+
+
 class CompanyAnnouncementListAPIView(APIView):
     permission_classes = [IsAuthenticated]
     

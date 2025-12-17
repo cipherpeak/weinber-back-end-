@@ -3,15 +3,97 @@ from task.models import Task
 from .models import *
 from django.utils import timezone
 
+
+
+
+class CheckInOutSerializer(serializers.Serializer):
+    location = serializers.CharField(max_length=255, required=True)
+    check_date = serializers.CharField(max_length=255, required=True)
+    reason = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    check_time = serializers.CharField(max_length=100, required=True)
+    time_zone = serializers.CharField(max_length=100, required=True)
+
+    def validate_location(self, value):
+        if not value or value.strip() == '':
+            raise serializers.ValidationError("Location is required")
+        return value
+    
+    def validate_check_date(self, value):
+        if not value or value.strip() == '':
+            raise serializers.ValidationError("Check date is required")
+        return value
+
+    def validate_check_time(self, value):
+        if not value or value.strip() == '':
+            raise serializers.ValidationError("Check time is required")
+        return value
+
+    def validate_time_zone(self, value):
+        if not value or value.strip() == '':
+            raise serializers.ValidationError("Time zone is required")
+        return value
+
+    def validate(self, data):
+        # For checkout, reason is mandatory
+        if self.context.get('is_checkout', False):
+            reason = data.get('reason')
+            if not reason or str(reason).strip() == '':
+                raise serializers.ValidationError({
+                    "reason": "Reason is required for checkout"
+                })
+        return data
+    
+
+
+
+class BreakSerializer(serializers.Serializer):
+    break_type = serializers.ChoiceField(
+        choices=['lunch', 'coffee', 'stretch', 'other'],
+        required=True
+    )
+    custom_break_type = serializers.CharField(required=False, allow_blank=True)
+    duration = serializers.CharField(required=True)  
+    break_start_time = serializers.CharField(required=True) 
+    location = serializers.CharField(required=True)
+    date = serializers.CharField(required=True)
+
+    def validate(self, data):
+        # If break_type is 'other', custom_break_type is required
+        if data.get('break_type') == 'other' and not data.get('custom_break_type'):
+            raise serializers.ValidationError({
+                "custom_break_type": "Custom break type is required when selecting 'Other'"
+            })
+        return data
+
+
+
+class EndBreakSerializer(serializers.Serializer):
+    break_end_time = serializers.CharField(required=True)
+    location = serializers.CharField(required=True)
+    date = serializers.CharField(required=True)
+    end_reason = serializers.CharField(required=False, allow_blank=True)    
+
+
+
+
+
+class CompanyAnnouncementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyAnnouncement
+        fields = ['id', 'heading', 'description', 'date']    
+    
+
+
+
+
+# ____________________
+    
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ['heading', 'status', 'address', 'task_assign_time', 'percentage_completed']
 
-class BreakTimerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BreakTimer
-        fields = ['break_type', 'duration', 'break_start_time']
+
 
 class BreakHistorySerializer(serializers.ModelSerializer):
     number_of_extended_breaks = serializers.IntegerField(source='number_of_scheduled_breaks')
@@ -20,10 +102,7 @@ class BreakHistorySerializer(serializers.ModelSerializer):
         model = BreakHistory
         fields = ['total_break_time', 'number_of_extended_breaks']
 
-class CompanyAnnouncementSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CompanyAnnouncement
-        fields = ['heading', 'body', 'date']
+
 
 class HomeAPISerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='employee_name')  
@@ -148,63 +227,9 @@ class HomeAPISerializer(serializers.ModelSerializer):
         ).order_by('-date')[:3]
         return CompanyAnnouncementSerializer(announcements, many=True).data
 
-class CheckInOutSerializer(serializers.Serializer):
-    location = serializers.CharField(max_length=255, required=True)
-    reason = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    check_time = serializers.CharField(max_length=100, required=True)
-    time_zone = serializers.CharField(max_length=100, required=True)
 
-    def validate_location(self, value):
-        if not value or value.strip() == '':
-            raise serializers.ValidationError("Location is required")
-        return value
-
-    def validate_check_time(self, value):
-        if not value or value.strip() == '':
-            raise serializers.ValidationError("Check time is required")
-        return value
-
-    def validate_time_zone(self, value):
-        if not value or value.strip() == '':
-            raise serializers.ValidationError("Time zone is required")
-        return value
-
-    def validate(self, data):
-        # For checkout, reason is mandatory
-        if self.context.get('is_checkout', False):
-            reason = data.get('reason')
-            if not reason or str(reason).strip() == '':
-                raise serializers.ValidationError({
-                    "reason": "Reason is required for checkout"
-                })
-        return data
-
-class BreakSerializer(serializers.Serializer):
-    break_type = serializers.ChoiceField(
-        choices=['lunch', 'coffee', 'stretch', 'other'],
-        required=False,allow_blank=True
-    )
-    custom_break_type = serializers.CharField(required=False, allow_blank=True)
-    duration = serializers.CharField(required=True)  
-    break_start_time = serializers.CharField(required=True) 
-    location = serializers.CharField(required=True)
-    reason = serializers.CharField(required=False, allow_blank=True)
     
-    def validate(self, data):
-        # If break_type is 'other', custom_break_type is required
-        if data.get('break_type') == 'other' and not data.get('custom_break_type'):
-            raise serializers.ValidationError({
-                "custom_break_type": "Custom break type is required when selecting 'Other'"
-            })
-        return data
-
-class EndBreakSerializer(serializers.Serializer):
-    break_end_time = serializers.CharField(required=True)
-    location = serializers.CharField(required=True)
-    end_reason = serializers.CharField(required=False, allow_blank=True) 
 
 
-class CompanyAnnouncementSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CompanyAnnouncement
-        fields = ['id', 'heading', 'description', 'date', 'is_active', 'created_at', 'updated_at']    
+
+

@@ -4,8 +4,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .models import VehicleAssignment, VehicleIssue, VisaDetails
-from .serializers import DocumentUpdateSerializer, EmployeeInformationSerializer, EmployeePersonalInfoSerializer, EmployeePersonalInfoUpdateSerializer, EmployeeProfileSerializer, ReportVehicleIssueSerializer, VehicleDetailsSerializer, VisaDetailsSerializer
+from .models import Vehicle, VehicleAssignment, VehicleIssue, VisaDetails
+from .serializers import CreateTemporaryVehicleSerializer, DocumentUpdateSerializer, EmployeeInformationSerializer, EmployeePersonalInfoSerializer, EmployeePersonalInfoUpdateSerializer, EmployeeProfileSerializer, ReportVehicleIssueSerializer, VehicleDetailsSerializer, VisaDetailsSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 
 class EmployeeProfileView(APIView):
@@ -155,7 +155,7 @@ class VisaDocumentsUpdateView(APIView):
         
 
 from django.utils import timezone 
-
+from .models import DailyOdometerReading
 
 class VehicleDetailsAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -169,9 +169,9 @@ class VehicleDetailsAPIView(APIView):
                 vehicle_assignment = VehicleAssignment.objects.get(employee=employee)
                 
                 if vehicle_assignment.vehicle:
-                    from .models import DailyOdometerReading
-                    today = timezone.now().date()
                     
+                    today = timezone.now().date()
+
                     # Create or get today's odometer reading
                     odometer_reading, created = DailyOdometerReading.objects.get_or_create(
                         vehicle=vehicle_assignment.vehicle,
@@ -261,3 +261,61 @@ class ReportVehicleIssueAPIView(APIView):
                 {"error": f"Failed to report issue: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )        
+
+
+
+
+class CreateTemporaryVehicleAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+
+        try:
+
+            serializer = CreateTemporaryVehicleSerializer(
+                data=request.data,
+                context={'request': request}
+            )
+            
+            if not serializer.is_valid():
+                return Response(
+                    {"success": False, "errors": serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            data = serializer.validated_data
+            user = request.user
+            
+            vehicle= Vehicle.objects.get(
+                vehicle_number=data['vehicle_number'].strip().upper(),
+                defaults={
+                    'model': data['vehicle_model'].strip(),
+                    'vehicle_type': 'sedan',
+                    'fuel_type': 'petrol',
+                    'status': 'active'
+                }
+            )
+            
+            assignment = VehicleAssignment.objects.get(
+                employee=user,
+            )
+            
+            assignment.temporary_vehicle = vehicle
+            assignment.temporary_vehicle_assigned_date = data['start_date']
+            assignment.temporary_vehicle_assigned_time = data['start_time']
+            assignment.temporary_vehicle_ending_date = data['end_date']
+            assignment.temporary_vehicle_ending_time = data['end_time']
+            assignment.note = data.get('add_note', '')
+            assignment.location = data.get('location', '')
+            assignment.save()
+            
+            return Response(
+                {"success": True},
+                status=status.HTTP_201_CREATED
+            )
+            
+        except Exception as e:
+            return Response(
+                {"success": False, "error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

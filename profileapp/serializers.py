@@ -227,41 +227,26 @@ class VehicleSerializer(serializers.ModelSerializer):
 
 class VehicleIssueSerializer(serializers.ModelSerializer):
     reported_by_name = serializers.SerializerMethodField()
-    reported_by_id = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = VehicleIssue
         fields = [
             'id', 'title', 
-            'reported_by', 'reported_by_name', 'reported_by_id',
-            'reported_date', 'status', 'created_at'
+            'reported_by_name',
+            'reported_date', 'status'
         ]
-    
+
     def get_reported_by_name(self, obj):
         """Get reporter's full name"""
         if obj.reported_by:
             # Try different methods to get the name
-            if hasattr(obj.reported_by, 'get_full_name'):
-                full_name = obj.reported_by.get_full_name()
+            if obj.reported_by.employee_name:
+                full_name = obj.reported_by.employee_name
                 if full_name:
                     return full_name
-            
-            if hasattr(obj.reported_by, 'first_name') and hasattr(obj.reported_by, 'last_name'):
-                name = f"{obj.reported_by.first_name} {obj.reported_by.last_name}".strip()
-                if name:
-                    return name
-            
             return str(obj.reported_by)
         return "Unknown"
     
-    def get_reported_by_id(self, obj):
-        """Get reporter's ID/employee ID"""
-        if obj.reported_by:
-            if hasattr(obj.reported_by, 'employeeId'):
-                return obj.reported_by.employeeId
-            elif hasattr(obj.reported_by, 'id'):
-                return obj.reported_by.id
-        return None
 
 
 class DailyOdometerReadingSerializer(serializers.ModelSerializer):
@@ -271,84 +256,171 @@ class DailyOdometerReadingSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at']
 
 
-class TemporaryVehicleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Vehicle
-        fields = ['id', 'vehicle_number', 'model', 'vehicle_type', 'fuel_type', 
-                 'vehicle_expiry_date', 'insurance_expiry_date']
 
 
 class VehicleDetailsSerializer(serializers.Serializer):
     class CurrentVehicleSerializer(serializers.Serializer):
         vehicle_image = serializers.SerializerMethodField()
-        vehicle_number = serializers.CharField(source='vehicle.vehicle_number')
-        model = serializers.CharField(source='vehicle.model')
-        vehicle_type = serializers.CharField(source='vehicle.vehicle_type')
-        assigned_date = serializers.DateField()
-        reported_vehicle_issues = serializers.SerializerMethodField() 
-        vehicle_expiry_date = serializers.DateField(source='vehicle.vehicle_expiry_date')
-        insurance_expiry_date = serializers.DateField(source='vehicle.insurance_expiry_date')
-        fuel_type = serializers.CharField(source='vehicle.fuel_type')
+        vehicle_number = serializers.SerializerMethodField()
+        model = serializers.SerializerMethodField()
+        vehicle_type = serializers.SerializerMethodField()
+        assigned_date = serializers.SerializerMethodField()
+        ending_date = serializers.SerializerMethodField()
+        insurance_expiry_date = serializers.SerializerMethodField()
+        fuel_type = serializers.SerializerMethodField()
         odometer_start_km = serializers.SerializerMethodField()
         odometer_end_km = serializers.SerializerMethodField()
-
-
-
+        reported_vehicle_issues = serializers.SerializerMethodField() 
 
         def get_vehicle_image(self, obj):
             """Get vehicle image URL"""
-            if obj.vehicle.vehicle_image:
+            if obj.vehicle and obj.vehicle.vehicle_image:
                 request = self.context.get('request')
                 if request:
                     return request.build_absolute_uri(obj.vehicle.vehicle_image.url)
                 return obj.vehicle.vehicle_image.url
             return None        
         
+        def get_vehicle_number(self, obj):
+            """Get vehicle number"""
+            if obj.vehicle:
+                return obj.vehicle.vehicle_number
+            return None
+        
+        def get_model(self, obj):
+            """Get vehicle model"""
+            if obj.vehicle:
+                return obj.vehicle.model
+            return None
+        
+        def get_vehicle_type(self, obj):
+            """Get vehicle type"""
+            if obj.vehicle:
+                return obj.vehicle.vehicle_type
+            return None
+        
+        def get_assigned_date(self, obj):
+            return obj.current_vehicle_assigned_date
+        
+        def get_ending_date(self, obj):
+            return obj.current_vehicle_ending_date
+        
+        def get_insurance_expiry_date(self, obj):
+            if obj.vehicle:
+                return obj.vehicle.insurance_expiry_date
+            return None
+        
+        def get_fuel_type(self, obj):
+            if obj.vehicle:
+                return obj.vehicle.get_fuel_type_display()
+            return None
+        
         def get_reported_vehicle_issues(self, obj):
             """Get ALL reported issues for this vehicle"""
-            issues = VehicleIssue.objects.filter(
-                vehicle=obj.vehicle
-            ).order_by('-reported_date', '-created_at')
-            
-            # Return serialized data with reporter details
-            return VehicleIssueSerializer(issues, many=True).data
+            if obj.vehicle:
+                issues = VehicleIssue.objects.filter(
+                    vehicle=obj.vehicle
+                ).order_by('-reported_date', '-created_at')
+                
+                return VehicleIssueSerializer(issues, many=True).data
+            return []
         
         def get_odometer_start_km(self, obj):
             try:
                 from django.utils import timezone
                 today = timezone.now().date()
-                reading = DailyOdometerReading.objects.get(
-                    vehicle=obj.vehicle,
-                    reading_date=today
-                )
-                return reading.start_km
+                if obj.vehicle:
+                    reading = DailyOdometerReading.objects.get(
+                        vehicle=obj.vehicle,
+                        reading_date=today
+                    )
+                    return reading.start_km
             except DailyOdometerReading.DoesNotExist:
                 return None
+            return None
         
         def get_odometer_end_km(self, obj):
             try:
                 from django.utils import timezone
                 today = timezone.now().date()
-                reading = DailyOdometerReading.objects.get(
-                    vehicle=obj.vehicle,
-                    reading_date=today
-                )
-                return reading.end_km
+                if obj.vehicle:
+                    reading = DailyOdometerReading.objects.get(
+                        vehicle=obj.vehicle,
+                        reading_date=today
+                    )
+                    return reading.end_km
             except DailyOdometerReading.DoesNotExist:
                 return None
+            return None
+    
+    class TemporaryVehicleSerializer(serializers.Serializer):
+        vehicle_image = serializers.SerializerMethodField()
+        vehicle_number = serializers.SerializerMethodField()
+        model = serializers.SerializerMethodField()
+        vehicle_type = serializers.SerializerMethodField()
+        temporary_vehicle_assigned_date = serializers.SerializerMethodField()
+        temporary_vehicle_ending_date = serializers.SerializerMethodField()
+        insurance_expiry_date = serializers.SerializerMethodField()
+        fuel_type = serializers.SerializerMethodField()
+        odometer_start_km = serializers.SerializerMethodField()
+        odometer_end_km = serializers.SerializerMethodField()
+        reported_vehicle_issues = serializers.SerializerMethodField()
+        
+        def get_vehicle_image(self, obj):
+            """Get vehicle image URL"""
+            # Temporary vehicle doesn't have image in your model
+            # If you want to store temp vehicle images, you need to add a field
+            return None
+        
+        def get_vehicle_number(self, obj):
+            """Get temporary vehicle number"""
+            return obj.temporary_vehicle_number
+        
+        def get_model(self, obj):
+            """Get temporary vehicle model"""
+            return obj.temporary_vehicle_model
+        
+        def get_vehicle_type(self, obj):
+            """Get temporary vehicle type"""
+            return obj.temporary_vehicle_type
+        
+        def get_temporary_vehicle_assigned_date(self, obj):
+            """Get assigned date for temporary vehicle"""
+            return obj.temporary_vehicle_assigned_date
+        
+        def get_temporary_vehicle_ending_date(self, obj):
+            """Get ending date for temporary vehicle"""
+            return obj.temporary_vehicle_ending_date
+        
+        def get_insurance_expiry_date(self, obj):
+            """Get insurance expiry date for temporary vehicle"""
+            return obj.temporary_vehicle_insurance_expiry_date
+        
+        def get_fuel_type(self, obj):
+            """Get fuel type for temporary vehicle"""
+            return obj.temporary_vehicle_fuel_type
+        
+        def get_reported_vehicle_issues(self, obj):
+            """Get reported issues for temporary vehicle"""
+            # Temporary vehicles in your model don't have a Vehicle relation
+            # So we can't get issues from VehicleIssue model
+            # Return empty list or you need to change your model structure
+            return []
+        
+        def get_odometer_start_km(self, obj):
+            """Get odometer start km for temporary vehicle"""
+            # Temporary vehicles don't have odometer readings in your current model
+            # You would need to store this separately or add to VehicleAssignment
+            return None
+        
+        def get_odometer_end_km(self, obj):
+            """Get odometer end km for temporary vehicle"""
+            # Temporary vehicles don't have odometer readings in your current model
+            return None
     
     current_vehicle = CurrentVehicleSerializer(source='*', allow_null=True)
-    
-    # FIX HERE: Remove source parameter when it's the same as field name
-    temporary_vehicle_assigned_date = serializers.DateTimeField(allow_null=True)
-    temporary_vehicle_ending_date = serializers.DateTimeField(allow_null=True)
-    
-    temporary_vehicle = serializers.SerializerMethodField()
-    
-    def get_temporary_vehicle(self, obj):
-        if obj.temporary_vehicle:
-            return TemporaryVehicleSerializer(obj.temporary_vehicle).data
-        return None
+    temporary_vehicle = TemporaryVehicleSerializer(source='*', allow_null=True)
+
     
 
 
@@ -377,3 +449,139 @@ class ReportVehicleIssueSerializer(serializers.ModelSerializer):
         if value > timezone.now().date():
             raise serializers.ValidationError("Reported date cannot be in the future")
         return value
+    
+
+from django.utils import timezone
+from datetime import datetime
+import re
+
+class CreateTemporaryVehicleSerializer(serializers.Serializer):
+    vehicle_number = serializers.CharField(
+        max_length=50, 
+        required=True,
+        trim_whitespace=True,
+        help_text="Vehicle registration number"
+    )
+    vehicle_model = serializers.CharField(
+        max_length=100, 
+        required=True,
+        trim_whitespace=True,
+        help_text="Vehicle model name"
+    )
+    start_date = serializers.CharField(
+        max_length=100, 
+        required=True,
+        help_text="Start date (YYYY-MM-DD format)"
+    )
+    end_date = serializers.CharField(
+        max_length=100, 
+        required=True,
+        help_text="End date (YYYY-MM-DD format)"
+    )
+    start_time = serializers.CharField(
+        max_length=100, 
+        required=True,
+        help_text="Start time (HH:MM format, 24-hour)"
+    )
+    end_time = serializers.CharField(
+        max_length=100, 
+        required=True,
+        help_text="End time (HH:MM format, 24-hour)"
+    )
+    add_note = serializers.CharField(
+        required=False, 
+        allow_blank=True,
+        max_length=1000,
+        help_text="Additional notes about the assignment"
+    )
+    location = serializers.CharField(
+        max_length=255, 
+        required=False, 
+        allow_blank=True,
+        help_text="Location where vehicle will be used"
+    )
+    
+    def validate_vehicle_number(self, value):
+        """Validate vehicle number format"""
+        value = value.strip().upper()
+        
+        if not value:
+            raise serializers.ValidationError("Vehicle number cannot be empty")
+        
+        if len(value) < 3:
+            raise serializers.ValidationError("Vehicle number is too short")
+        
+        return value
+    
+    def validate_vehicle_model(self, value):
+        """Validate vehicle model"""
+        value = value.strip()
+        
+        if not value:
+            raise serializers.ValidationError("Vehicle model cannot be empty")
+        
+        if len(value) < 2:
+            raise serializers.ValidationError("Vehicle model is too short")
+        
+        return value
+    
+    def validate_start_date(self, value):
+        """Validate start date format and logic"""
+        value = value.strip()
+        
+        # Check if it's a valid date format (YYYY-MM-DD)
+        try:
+            parsed_date = datetime.strptime(value, '%Y-%m-%d').date()
+        except ValueError:
+            raise serializers.ValidationError(
+                "Start date must be in YYYY-MM-DD format (e.g., 2024-12-18)"
+            )
+        
+        # Check if date is not in the past
+        today = timezone.now().date()
+        if parsed_date < today:
+            raise serializers.ValidationError("Start date cannot be in the past")
+        
+        return value
+    
+    def validate_end_date(self, value):
+        """Validate end date format"""
+        value = value.strip()
+        
+        try:
+            parsed_date = datetime.strptime(value, '%Y-%m-%d').date()
+        except ValueError:
+            raise serializers.ValidationError(
+                "End date must be in YYYY-MM-DD format (e.g., 2024-12-20)"
+            )
+        
+        return value
+    
+    def validate_start_time(self, value):
+        """Validate start time format (24-hour format)"""
+        value = value.strip()
+        
+        # Check HH:MM format (24-hour)
+        time_pattern = r'^([01]?[0-9]|2[0-3]):([0-5][0-9])$'
+        if not re.match(time_pattern, value):
+            raise serializers.ValidationError(
+                "Start time must be in HH:MM format (24-hour, e.g., 09:00 or 14:30)"
+            )
+        
+        return value
+    
+    def validate_end_time(self, value):
+        """Validate end time format"""
+        value = value.strip()
+        
+        time_pattern = r'^([01]?[0-9]|2[0-3]):([0-5][0-9])$'
+        if not re.match(time_pattern, value):
+            raise serializers.ValidationError(
+                "End time must be in HH:MM format (24-hour, e.g., 18:00 or 21:45)"
+            )
+        
+        return value    
+
+
+
+

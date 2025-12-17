@@ -76,15 +76,7 @@ class Document(models.Model):
 
 
 class Vehicle(models.Model):
-    VEHICLE_TYPES = [
-        ('sedan', 'Sedan'),
-        ('suv', 'SUV'),
-        ('truck', 'Truck'),
-        ('van', 'Van'),
-        ('pickup', 'Pickup'),
-        ('motorcycle', 'Motorcycle'),
-    ]
-    
+
     FUEL_TYPES = [
         ('petrol', 'Petrol'),
         ('diesel', 'Diesel'),
@@ -93,21 +85,11 @@ class Vehicle(models.Model):
         ('cng', 'CNG'),
     ]
     
-    STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('maintenance', 'Under Maintenance'),
-        ('inactive', 'Inactive'),
-        ('retired', 'Retired'),
-    ]
-    
     vehicle_number = models.CharField(max_length=50, unique=True)
     model = models.CharField(max_length=100)
-    vehicle_type = models.CharField(max_length=20, choices=VEHICLE_TYPES)
+    vehicle_type = models.CharField(max_length=60,null=True,blank=True)
     fuel_type = models.CharField(max_length=20, choices=FUEL_TYPES)
-    registration_date = models.DateField()
-    vehicle_expiry_date = models.DateField()
     insurance_expiry_date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     vehicle_image = models.ImageField(upload_to='vehicles/', null=True, blank=True)
@@ -120,6 +102,10 @@ class Vehicle(models.Model):
 
 
 class VehicleAssignment(models.Model):
+    STATUS_CHOICES = [
+        ('current_vehicle', 'Current Vehicle'),
+        ('temporary_vehicle', 'Temporary Vehicle'),
+    ]
     employee = models.OneToOneField(
         Employee,
         on_delete=models.CASCADE,
@@ -132,21 +118,29 @@ class VehicleAssignment(models.Model):
         null=True,
         blank=True
     )
-    assigned_date = models.DateField()
-    temporary_vehicle = models.ForeignKey(
-        Vehicle,
-        on_delete=models.SET_NULL,
-        related_name='temporary_assignments',
-        null=True,
-        blank=True
-    )
-    temporary_vehicle_assigned_date = models.DateTimeField(null=True, blank=True)
-    temporary_vehicle_ending_date = models.DateTimeField(null=True, blank=True)
+    current_vehicle_assigned_date = models.DateField(null=True, blank=True)  
+    current_vehicle_assigned_time = models.TimeField(null=True, blank=True)  
+    current_vehicle_ending_date = models.DateField(null=True, blank=True)  
+    current_vehicle_ending_time = models.TimeField(null=True, blank=True)  
+
+    temporary_vehicle_number = models.CharField(max_length=50, null=True, blank=True)
+    temporary_vehicle_model = models.CharField(max_length=50, null=True, blank=True)
+    temporary_vehicle_type = models.CharField(max_length=50, null=True, blank=True)
+    temporary_vehicle_fuel_type = models.CharField(max_length=50, null=True, blank=True)
+    temporary_vehicle_insurance_expiry_date = models.CharField(max_length=50, null=True, blank=True)
+
+    temporary_vehicle_assigned_date = models.CharField(max_length=100, null=True, blank=True)  
+    temporary_vehicle_assigned_time = models.CharField(max_length=100, null=True, blank=True)  
+    temporary_vehicle_ending_date = models.CharField(max_length=100, null=True, blank=True)  
+    temporary_vehicle_ending_time = models.CharField(max_length=100, null=True, blank=True)  
+    
+    note = models.TextField(blank=True, null=True, help_text="Additional notes for temporary vehicle assignment")
+    location = models.CharField(max_length=255, blank=True, null=True, help_text="Location where temporary vehicle is assigned")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='current_vehicle')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    class Meta:
-        ordering = ['-assigned_date']
     
     def __str__(self):
         return f"{self.employee.employeeId} - {self.vehicle.vehicle_number if self.vehicle else 'No Vehicle'}"
@@ -166,6 +160,7 @@ class VehicleIssue(models.Model):
         related_name='issues'
     )
     title = models.CharField(max_length=200)
+    description = models.TextField(blank=True,null=True)
     reported_by = models.ForeignKey(
         Employee,
         on_delete=models.SET_NULL,
@@ -174,6 +169,7 @@ class VehicleIssue(models.Model):
     )
     reported_date = models.DateField()
     status = models.CharField(max_length=20, choices=ISSUE_STATUS, default='open')
+    vehicle_issue_image = models.ImageField(upload_to='vehicle_issue/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

@@ -10,9 +10,7 @@ urlpatterns = [
     path('visa-documents/update/', VisaDocumentsUpdateView.as_view(), name='visa-documents-update'),
     path('vehicle-details/', VehicleDetailsAPIView.as_view(), name='vehicle-details'),
     path('vehicle-report/', ReportVehicleIssueAPIView.as_view(), name='vehicle-report'),
+    path('create-temporary-vehicle/', CreateTemporaryVehicleAPIView.as_view(), name='create-temporary-vehicle'),
 
-
-
-    
 
 ]

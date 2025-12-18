@@ -149,6 +149,56 @@ class VehicleAssignment(models.Model):
     
     def __str__(self):
         return f"{self.employee.employeeId} - {self.vehicle.vehicle_number if self.vehicle else 'No Vehicle'}"
+    
+
+
+class TemporaryVehicleHistory(models.Model):
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name='temporary_vehicle_history'
+    )
+    
+    # Temporary vehicle details (stored permanently)
+    vehicle_number = models.CharField(max_length=50)
+    vehicle_model = models.CharField(max_length=50)
+    vehicle_type = models.CharField(max_length=50, null=True, blank=True)
+    fuel_type = models.CharField(max_length=50, null=True, blank=True)
+    insurance_expiry_date = models.CharField(max_length=50, null=True, blank=True)
+    vehicle_image = models.ImageField(upload_to='temporary_vehicles_history/', null=True, blank=True)
+    
+    # Assignment details
+    assigned_date = models.DateField(null=True, blank=True)
+    assigned_time = models.TimeField(null=True, blank=True)
+    ending_date = models.DateField(null=True, blank=True)
+    ending_time = models.TimeField(null=True, blank=True)
+    
+    # Additional info
+    note = models.TextField(blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    
+    # Status
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('completed', 'Completed'),
+            ('cancelled', 'Cancelled'),
+            ('expired', 'Auto-Expired'),
+        ],
+        default='completed'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-ending_date', '-ending_time']
+        verbose_name_plural = 'Temporary Vehicle Histories'
+    
+    def __str__(self):
+        return f"{self.employee.employeeId} - {self.vehicle_number} ({self.assigned_date} to {self.ending_date})"
+
+
 
 
 class VehicleIssue(models.Model):

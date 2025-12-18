@@ -2,6 +2,7 @@ from datetime import timezone
 from rest_framework import serializers
 from authapp.models import Employee
 from .models import Document, VehicleIssue, VisaDetails, Vehicle, DailyOdometerReading
+import pytz
 
 class EmployeeProfileSerializer(serializers.ModelSerializer):
     profile_pic = serializers.SerializerMethodField()
@@ -327,12 +328,14 @@ class VehicleDetailsSerializer(serializers.Serializer):
         
         def get_odometer_start_km(self, obj):
             try:
-                from django.utils import timezone
-                today = timezone.now().date()
+                dubai_tz = pytz.timezone('Asia/Dubai')
+                
+                today_dubai = timezone.localtime(timezone.now(), dubai_tz).date()
+                
                 if obj.vehicle:
                     reading = DailyOdometerReading.objects.get(
                         vehicle=obj.vehicle,
-                        reading_date=today
+                        reading_date=today_dubai
                     )
                     return reading.start_km
             except DailyOdometerReading.DoesNotExist:
@@ -341,18 +344,19 @@ class VehicleDetailsSerializer(serializers.Serializer):
         
         def get_odometer_end_km(self, obj):
             try:
-                from django.utils import timezone
-                today = timezone.now().date()
+                dubai_tz = pytz.timezone('Asia/Dubai')
+                
+                today_dubai = timezone.localtime(timezone.now(), dubai_tz).date()
+                
                 if obj.vehicle:
                     reading = DailyOdometerReading.objects.get(
                         vehicle=obj.vehicle,
-                        reading_date=today
+                        reading_date=today_dubai
                     )
                     return reading.end_km
             except DailyOdometerReading.DoesNotExist:
                 return None
             return None
-    
     class TemporaryVehicleSerializer(serializers.Serializer):
         vehicle_image = serializers.SerializerMethodField()
         vehicle_number = serializers.SerializerMethodField()
@@ -360,6 +364,8 @@ class VehicleDetailsSerializer(serializers.Serializer):
         vehicle_type = serializers.SerializerMethodField()
         temporary_vehicle_assigned_date = serializers.SerializerMethodField()
         temporary_vehicle_ending_date = serializers.SerializerMethodField()
+        temporary_vehicle_assigned_time = serializers.SerializerMethodField()
+        temporary_vehicle_ending_time = serializers.SerializerMethodField()
         insurance_expiry_date = serializers.SerializerMethodField()
         fuel_type = serializers.SerializerMethodField()
         odometer_start_km = serializers.SerializerMethodField()
@@ -395,6 +401,14 @@ class VehicleDetailsSerializer(serializers.Serializer):
             """Get ending date for temporary vehicle"""
             return obj.temporary_vehicle_ending_date
         
+        def get_temporary_vehicle_assigned_time(self, obj):
+            """Get assigned date for temporary vehicle"""
+            return obj.temporary_vehicle_assigned_time
+        
+        def get_temporary_vehicle_ending_time(self, obj):
+            """Get ending date for temporary vehicle"""
+            return obj.temporary_vehicle_ending_time
+
         def get_insurance_expiry_date(self, obj):
             """Get insurance expiry date for temporary vehicle"""
             return obj.temporary_vehicle_insurance_expiry_date
@@ -435,14 +449,22 @@ class VehicleDetailsSerializer(serializers.Serializer):
 
 
 class ReportVehicleIssueSerializer(serializers.ModelSerializer):
+    vehicle_issue_image = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        help_text="Image of the vehicle issue"
+    )
+    
     class Meta:
         model = VehicleIssue
-        fields = ['title', 'reported_date', 'status']
+        fields = ['title', 'reported_date', 'status', 'description', 'vehicle_issue_image']
         extra_kwargs = {
             'title': {'required': True},
             'reported_date': {'required': True},
             'status': {'required': True},
+            'description': {'required': False, 'allow_blank': True},
         }
+
     
     def validate_status(self, value):
         """Validate status choices"""
@@ -454,9 +476,14 @@ class ReportVehicleIssueSerializer(serializers.ModelSerializer):
         return value
     
     def validate_reported_date(self, value):
-        """Validate reported date is not in the future"""
-        from django.utils import timezone
-        if value > timezone.now().date():
+        """Validate reported date is not in the future (Dubai time)"""
+        # Get Dubai timezone
+        dubai_tz = pytz.timezone('Asia/Dubai')
+        
+        # Get current date IN DUBAI
+        today_dubai = timezone.localtime(timezone.now(), dubai_tz).date()
+        
+        if value > today_dubai:
             raise serializers.ValidationError("Reported date cannot be in the future")
         return value
     
@@ -553,12 +580,22 @@ class CreateTemporaryVehicleSerializer(serializers.Serializer):
         return value
     
     def validate_start_date(self, value):
-        """Validate start date format ONLY, skip past date check"""
+        """Validate start date format (Dubai timezone aware)"""
         value = value.strip()
         
         try:
-            # Just validate format, don't check if it's in the past
+            # Validate format
             parsed_date = datetime.strptime(value, '%Y-%m-%d').date()
+            
+            # OPTIONAL: Add Dubai timezone check if needed
+            # dubai_tz = pytz.timezone('Asia/Dubai')
+            # today_dubai = DubaiTimeZoneHelper.get_current_dubai_date()
+            # 
+            # if parsed_date < today_dubai:
+            #     raise serializers.ValidationError(
+            #         f"Start date cannot be in the past. Today is {today_dubai}"
+            #     )
+            
         except ValueError:
             raise serializers.ValidationError(
                 "Start date must be in YYYY-MM-DD format (e.g., 2024-12-18)"
@@ -567,7 +604,7 @@ class CreateTemporaryVehicleSerializer(serializers.Serializer):
         return value
         
     def validate_end_date(self, value):
-        """Validate end date format and ensure it's after start date"""
+        """Validate end date format and ensure it's after start date (Dubai aware)"""
         value = value.strip()
         
         try:
@@ -585,42 +622,17 @@ class CreateTemporaryVehicleSerializer(serializers.Serializer):
                 if parsed_end_date < parsed_start_date:
                     raise serializers.ValidationError("End date must be after start date")
             except ValueError:
-                # Start date validation will catch this error
                 pass
         
         return value
-    
-    def validate_start_time(self, value):
-        """Validate start time format (24-hour format)"""
-        value = value.strip()
-        
-        # Check HH:MM format (24-hour)
-        time_pattern = r'^([01]?[0-9]|2[0-3]):([0-5][0-9])$'
-        if not re.match(time_pattern, value):
-            raise serializers.ValidationError(
-                "Start time must be in HH:MM format (24-hour, e.g., 09:00 or 14:30)"
-            )
-        
-        return value
-    
-    def validate_end_time(self, value):
-        """Validate end time format"""
-        value = value.strip()
-        
-        time_pattern = r'^([01]?[0-9]|2[0-3]):([0-5][0-9])$'
-        if not re.match(time_pattern, value):
-            raise serializers.ValidationError(
-                "End time must be in HH:MM format (24-hour, e.g., 18:00 or 21:45)"
-            )
-        
-        return value
+
     
     def validate(self, data):
         """
-        Object-level validation for date/time consistency.
+        Object-level validation for date/time consistency (Dubai timezone aware).
         """
-        # Check if end datetime is after start datetime
         try:
+            # Parse dates
             start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
             end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
             
@@ -638,10 +650,9 @@ class CreateTemporaryVehicleSerializer(serializers.Serializer):
                     })
                     
         except (ValueError, KeyError):
-            # Individual field validations will have caught format errors
             pass
         
-        return data   
+        return data 
 
 
 

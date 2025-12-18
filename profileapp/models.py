@@ -122,7 +122,12 @@ class VehicleAssignment(models.Model):
     current_vehicle_assigned_time = models.TimeField(null=True, blank=True)  
     current_vehicle_ending_date = models.DateField(null=True, blank=True)  
     current_vehicle_ending_time = models.TimeField(null=True, blank=True)  
-
+    temporary_vehicle_image = models.ImageField(
+        upload_to='temporary_vehicles/',
+        null=True,
+        blank=True,
+        help_text="Image of the temporary vehicle"
+    )
     temporary_vehicle_number = models.CharField(max_length=50, null=True, blank=True)
     temporary_vehicle_model = models.CharField(max_length=50, null=True, blank=True)
     temporary_vehicle_type = models.CharField(max_length=50, null=True, blank=True)

@@ -156,20 +156,60 @@ class VisaDocumentsUpdateView(APIView):
 
 from django.utils import timezone 
 from .models import DailyOdometerReading
+from datetime import datetime
 
 class VehicleDetailsAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
         try:
-
             employee = request.user
             
             try:
                 vehicle_assignment = VehicleAssignment.objects.get(employee=employee)
                 
-                if vehicle_assignment.vehicle:
-                    
+
+                if vehicle_assignment.status == 'temporary_vehicle':
+                    try:
+                        end_date_str = vehicle_assignment.temporary_vehicle_ending_date
+                        end_time_str = vehicle_assignment.temporary_vehicle_ending_time
+                        
+                        if end_date_str and end_time_str:
+                            end_datetime_str = f"{end_date_str} {end_time_str}"
+                            end_datetime = datetime.strptime(end_datetime_str, '%Y-%m-%d %H:%M')
+                            
+                            end_datetime = timezone.make_aware(end_datetime)
+                            
+                            now = timezone.now()
+                            print(f"DEBUG: now={now}, end_datetime={end_datetime}")
+
+                            if now >= end_datetime:
+                                print("DEBUG: Temporary vehicle HAS expired")
+                                vehicle_assignment.temporary_vehicle_number = None
+                                vehicle_assignment.temporary_vehicle_model = None
+                                vehicle_assignment.temporary_vehicle_type = None
+                                vehicle_assignment.temporary_vehicle_fuel_type = None
+                                vehicle_assignment.temporary_vehicle_insurance_expiry_date = None
+                                vehicle_assignment.temporary_vehicle_assigned_date = None
+                                vehicle_assignment.temporary_vehicle_assigned_time = None
+                                vehicle_assignment.temporary_vehicle_ending_date = None
+                                vehicle_assignment.temporary_vehicle_ending_time = None
+                                vehicle_assignment.note = None
+                                vehicle_assignment.location = None
+                                
+                                vehicle_assignment.status = 'current_vehicle'
+                                
+                                vehicle_assignment.save()
+                                
+                                print(f"DEBUG: Temporary vehicle expired for {employee.employeeId}. Status changed to 'current_vehicle'.")
+                                
+                    except (ValueError, TypeError) as e:
+                        # Handle parsing errors gracefully
+                        print(f"DEBUG: Error parsing temporary vehicle end datetime: {e}")
+                        # You might want to handle this case differently
+                
+
+                if vehicle_assignment.vehicle and vehicle_assignment.status == 'current_vehicle':
                     today = timezone.now().date()
 
                     # Create or get today's odometer reading
@@ -198,6 +238,7 @@ class VehicleDetailsAPIView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
         
 
 
@@ -266,12 +307,12 @@ class ReportVehicleIssueAPIView(APIView):
 
 
 class CreateTemporaryVehicleAPIView(APIView):
+
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
-
         try:
-
+            # Validate incoming data
             serializer = CreateTemporaryVehicleSerializer(
                 data=request.data,
                 context={'request': request}
@@ -286,35 +327,43 @@ class CreateTemporaryVehicleAPIView(APIView):
             data = serializer.validated_data
             user = request.user
             
-            vehicle= Vehicle.objects.get(
-                vehicle_number=data['vehicle_number'].strip().upper(),
-                defaults={
-                    'model': data['vehicle_model'].strip(),
-                    'vehicle_type': 'sedan',
-                    'fuel_type': 'petrol',
-                    'status': 'active'
-                }
+            assignment, created = VehicleAssignment.objects.get_or_create(
+                employee=user
             )
             
-            assignment = VehicleAssignment.objects.get(
-                employee=user,
-            )
+            assignment.temporary_vehicle_number = data['vehicle_number'].strip().upper()
+            assignment.temporary_vehicle_model = data['vehicle_model'].strip()
             
-            assignment.temporary_vehicle = vehicle
+            # Use a default or get from input if you add it to serializer
+            assignment.temporary_vehicle_type = data['vehicle_type'] .strip()
+            assignment.temporary_vehicle_fuel_type = data.get('fuel_type', 'petrol')
+            
+            # Dates and times (stored as CharField in your model)
             assignment.temporary_vehicle_assigned_date = data['start_date']
             assignment.temporary_vehicle_assigned_time = data['start_time']
             assignment.temporary_vehicle_ending_date = data['end_date']
             assignment.temporary_vehicle_ending_time = data['end_time']
+            
+            # Optional fields
             assignment.note = data.get('add_note', '')
             assignment.location = data.get('location', '')
+
+            if 'vehicle_image' in request.FILES:
+                assignment.temporary_vehicle_image = request.FILES['vehicle_image']
+
+            # -- CRITICAL: Update the status to 'temporary_vehicle' --
+            assignment.status = 'temporary_vehicle'
+            
+            # Save the updated assignment
             assignment.save()
             
             return Response(
-                {"success": True},
+                {"success": True, "message": "Temporary vehicle assigned successfully."},
                 status=status.HTTP_201_CREATED
             )
             
         except Exception as e:
+            # Log the exception here if needed
             return Response(
                 {"success": False, "error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

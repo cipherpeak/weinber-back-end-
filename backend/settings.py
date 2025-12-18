@@ -116,6 +116,12 @@ DATABASES = {
 }
 
 
+TIME_ZONE = 'Asia/Dubai'  # Dubai timezone
+
+# Use timezone-aware datetimes
+USE_TZ = True
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

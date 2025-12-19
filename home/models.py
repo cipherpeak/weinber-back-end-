@@ -130,13 +130,9 @@ class Leave(models.Model):
         verbose_name="Category of Leave"
     )
     
-    # start_date = models.DateField(
-    #     verbose_name="From"
-    # )
+    start_date = models.CharField(max_length=100)  
     
-    # end_date = models.DateField(
-    #     verbose_name="To"
-    # ) change here
+    end_date = models.CharField(max_length=100)  
     
     total_days = models.DecimalField(
         max_digits=5,
@@ -151,17 +147,9 @@ class Leave(models.Model):
         null=True
     )
     
-    # passport_required_from = models.DateField(
-    #     blank=True,
-    #     null=True,
-    #     verbose_name="Passport Required From"
-    # )
-
-    # passport_required_to = models.DateField(
-    #     blank=True,
-    #     null=True,
-    #     verbose_name="Passport Required to"
-    # ) change here
+    passport_required_from = models.CharField(max_length=100,null=True,blank=True)  
+    
+    passport_required_to = models.CharField(max_length=100,null=True,blank=True)  
     
     address_during_leave = models.TextField(
         blank=True,
@@ -186,11 +174,12 @@ class Leave(models.Model):
         verbose_name="Attach Media"
     )
 
-    # signature = models.TextField(
-    #     blank=True,
-    #     null=True,
-    #     verbose_name="Signature"
-    # ) change here
+    signature = models.FileField(
+        upload_to='signature_attachments/',
+        blank=True,
+        null=True,
+        verbose_name="Attach Media"
+    )
 
     # Status and approval
     status = models.CharField(
@@ -217,22 +206,10 @@ class Leave(models.Model):
         null=True
     )
 
-
-    # response look like
-    # category of leave 
-    # from and to
-    # total number of leave 
-    # reason
-    # reason for rejection
-    # status
-
-
     
-    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # Metadata
     class Meta:
         ordering = ['-created_at']
         verbose_name = "Leave Application"
@@ -241,31 +218,10 @@ class Leave(models.Model):
     def __str__(self):
         return f"{self.employee.employeeId} - {self.category} ({self.start_date} to {self.end_date})"
     
-    def save(self, *args, **kwargs):
-        if not self.total_days and self.start_date and self.end_date:
-            delta = self.end_date - self.start_date
-            self.total_days = delta.days + 1  
-        
-        # Set approved_at timestamp when status changes to approved
-        if self.status == 'approved' and not self.approved_at:
-            self.approved_at = timezone.now()
-        
-        super().save(*args, **kwargs)
-    
-    @property
-    def is_active(self):
-        """Check if the leave period is currently active"""
-        today = timezone.now().date()
-        return self.start_date <= today <= self.end_date
-    
-    @property
-    def is_upcoming(self):
-        """Check if the leave is in the future"""
-        today = timezone.now().date()
-        return today < self.start_date
-    
-    @property
-    def is_past(self):
-        """Check if the leave is in the past"""
-        today = timezone.now().date()
-        return today > self.end_date
+
+
+
+
+
+
+

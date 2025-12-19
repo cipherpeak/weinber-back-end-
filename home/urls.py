@@ -8,4 +8,9 @@ urlpatterns = [
     path('break/start/', StartBreakAPIView.as_view(), name='start-break'),
     path('break/end/', EndBreakAPIView.as_view(), name='end-break'),
     path('company-announcements/', CompanyAnnouncementListAPIView.as_view(), name='company-announcements'),
+    path('leave-list/', LeaveDashboardView.as_view(), name='leave-list'),
+    path('leave-apply/', LeaveApplicationView.as_view(), name='leave-apply'),
+    path('leave/<int:leave_id>/', LeaveDetailView.as_view(), name='leave-detail'),
+
+
 ]

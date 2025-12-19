@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/home/', include('home.urls')),
     path('api/profile/', include('profileapp.urls')),
     path('api/task/', include('task.urls')),
+    path('api/office/', include('office.urls')),
 
 ]
 

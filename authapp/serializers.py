@@ -26,8 +26,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        fields = ['employeeId', 'employee_type', 'profile_pic', 'app_icon']
-        read_only_fields = ['employeeId', 'employee_type', 'profile_pic', 'app_icon']
+        fields = ['employeeId', 'employee_type', 'profile_pic', 'app_icon','role']
+        read_only_fields = ['employeeId', 'employee_type', 'profile_pic', 'app_icon','role']
     
     def get_profile_pic(self, obj):
         if obj.profile_pic:

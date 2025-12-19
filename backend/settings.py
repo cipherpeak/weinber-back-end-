@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'authapp',
     'home',
     'dashboard',
+    'office',
 ]
 
 from datetime import timedelta
